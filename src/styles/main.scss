@@ -1,0 +1,309 @@
+@import './variables';
+@import './typography';
+@import './common';
+
+/*---------------------------------------
+  CUSTOM PROPERTIES ( VARIABLES )
+-----------------------------------------*/
+:root {
+  --white-color: #FFFFFF;
+  --primary-color: #247cff;
+  --section-bg-color: #F9F9F9;
+  --dark-color: #000000;
+  --title-color: #565758;
+  --p-color: #717275;
+  --border-color: #eaeaea;
+
+  --body-font-family: 'Open Sans', sans-serif;
+
+  --h1-font-size: 48px;
+  --h2-font-size: 36px;
+  --h3-font-size: 32px;
+  --h4-font-size: 28px;
+  --h5-font-size: 24px;
+  --h6-font-size: 20px;
+  --p-font-size: 18px;
+  --menu-font-size: 16px;
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}
+
+
+
+//Grid
+.customer-photo {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-size: 32px 35px;
+  background-position: center center;
+  vertical-align: middle;
+  line-height: 32px;
+  box-shadow: inset 0 0 1px #999, inset 0 0 10px rgba(0, 0, 0, 0.2);
+  margin-left: 5px;
+}
+
+.customer-name {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 32px;
+  padding-left: 10px;
+}
+
+.red {
+  color: #d9534f;
+}
+
+.text-bold {
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.4em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+.badge-success {
+  color: #fff;
+  background-color: #28a745;
+}
+
+.badge-danger {
+  color: #fff;
+  background-color: #dc3545;
+}
+
+// Chart
+.chart-tooltip {
+  text-align: center;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+// Card
+.employee-photo {
+  display: inline-block;
+  border-radius: 50%;
+  background-size: 38px 41px;
+  background-position: center center;
+  vertical-align: middle;
+  line-height: 32px;
+}
+
+.card-opacity {
+  opacity: 0.5;
+}
+
+// Scheduler
+kendo-recurrence-frequency-editor .k-edit-label {
+  width: unset;
+  margin-right: 10px;
+}
+
+kendo-recurrence-frequency-editor .k-edit-field {
+  width: unset;
+  float: none;
+}
+
+.k-team-mark {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+// Header
+.material-bg .k-input,
+.material-bg .k-dropdown-wrap .k-i-arrow-s {
+  color: white;
+}
+
+.material-bg .k-dropdown-wrap {
+  border-color: white;
+}
+
+.material-bg .k-dropdown-wrap.k-state-focused {
+  border-color: #697bcf;
+  border-bottom-width: 2px;
+}
+
+.material-bg .k-dropdown-wrap:hover {
+  border-color: #2942bb;
+  border-bottom-width: 2px;
+}
+
+.ddl-theme {
+  width: 60px;
+}
+
+.ddl-locale .k-dropdown-wrap {
+  width: 98px;
+}
+
+
+.data-container {
+  display: flex;
+  justify-content: space-between;
+  /* 每個項目之間的間距自動調整 */
+  flex-wrap: wrap;
+  // width: 100%;
+  // height: 100%;
+}
+
+.data-item {
+  flex: 1;
+  display: flex;
+  /* 自動調整寬度 */
+  // margin-right: 20px; /* 設置每個資料項目之間的間距 */
+  width: 100%;
+  height: 100%;
+}
+
+.item-container {
+  border: 5px solid #f74c03;
+  /* 設置邊框 */
+  border-radius: 15px;
+  /* 設置圓角 */
+  padding: 10px;
+  /* 設置內邊距 */
+  display: flex;
+  /* 使用 Flexbox 來置中文字 */
+  flex-direction: column;
+  /* 垂直排列 */
+  align-items: center;
+  /* 垂直置中 */
+  justify-content: center;
+  /* 水平置中 */
+  margin-bottom: 10px;
+  /* 設置間距 */
+  margin-right: 10px;
+  /* 設置間距 */
+
+}
+
+
+.devices-count {
+  font-size: 30px;
+  /* 設置字體大小 */
+  color: blue;
+  /* 設置字體顏色 */
+  font-family: Arial, sans-serif;
+  /* 設置字型 */
+}
+
+.device-group {
+  font-size: 16px;
+  /* 設置字體大小 */
+  color: green;
+  /* 設置字體顏色 */
+  font-family: Arial, sans-serif;
+  /* 設置字型 */
+}
+
+
+.featured-circle {
+  border-radius: 15%;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  padding: 0 10px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  /* 水平居中 */
+  align-items: center;
+  /* 垂直居中 */
+}
+
+
+.paneltitle {
+  margin-left: 50px;
+  color: black;
+}
+
+.logname-circle {
+  // border-radius: 5%;
+  border:2px solid black;
+  // width: 180px;
+  // height: 80px;
+  margin: 0 auto;
+  padding: 0 10px;
+  overflow: hidden;
+  display: flex;
+  flex-grow: 1;
+  justify-content: center;
+  /* 水平居中 */
+  align-items: center;
+  /* 垂直居中 */
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, transform 0.3s ease; /* 定義過渡效果 */
+  /* 定義過渡效果 */
+}
+
+.logname-circle:hover {
+  /* 在游標停留時的樣式 */
+  color: #fff;
+  background-color: #000;
+  transform: scale(1.1); /* 放大按鈕 */
+
+}
+
+
+.featured-text {
+  font-size: var(--h6-font-size);
+  line-height: 2rem;
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.logname-text {
+  font-size: var(--h6-font-size);
+  line-height: 2rem;
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  margin-bottom: 0;
+  color: white;
+}
+
+
+.featured-number {
+  color: var(--primary-color);
+  font-size: 5rem;
+  margin: 0 5px;
+}
+
+.shadow-lg {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+// .tab-content {
+//   width: 100%;
+//   height: 100%;
+// }
+
+
+// kendo-tabstrip p {
+//   width: 100%;
+//   height: 100%;
+// }
+
+
+.full-width-tabstrip {
+  margin: 0%;
+  margin-left: 0%;
+  width: 100%;
+  height: 840px;
+}

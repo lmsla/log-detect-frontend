@@ -1,0 +1,50 @@
+<div class="panel" style="width: 100%; height: 100%;">
+
+  <h2 class="paneltitle">log</h2>
+  <div class="data-container">
+    <div *ngFor="let logname of lognameCheck" class="data-item">
+      <button class="logname-circle" [ngStyle]="{'background-color': getColor(logname)}" (click)="handleButtonClick($event,logname)">
+
+        <p class="logname-text"><span class="logname-text">{{logname.name}}</span>
+        </p>
+      </button>
+    </div>
+  </div>
+  <h2 class="paneltitle">{{currentLogname}}</h2>
+
+  <!-- <form [formGroup]="formGroup">
+    <div>
+      <h2 class="paneltitle">日誌名稱</h2>
+      <kendo-label>
+        <kendo-dropdownlist textField="logname" valueField="logname" [data]="dropdownSource"
+          (valueChange)="lognameDropdownValueChange($event)" [valuePrimitive]="true" formControlName="logname">
+        </kendo-dropdownlist>
+      </kendo-label>
+    </div>
+  </form> -->
+
+  <kendo-chart class="panel">
+    <kendo-chart-x-axis>
+      <kendo-chart-x-axis-item [visible]="false"></kendo-chart-x-axis-item>
+      <kendo-chart-x-axis-item [labels]="{ rotation: -90 }"></kendo-chart-x-axis-item>
+
+    </kendo-chart-x-axis>
+    <kendo-chart-tooltip format="{ valueField }: { value }"></kendo-chart-tooltip>
+    <kendo-chart-series class="panel">
+      <kendo-chart-series-item type="heatmap" [data]="pagedChartData" xField="time" yField="name" valueField="value"
+        [color]="gethpColor">
+
+        <kendo-chart-series-item-labels [visible]="false"></kendo-chart-series-item-labels>
+        <kendo-chart-series-item-markers type="roundedRect" [size]="getSize">
+        </kendo-chart-series-item-markers>
+      </kendo-chart-series-item>
+
+    </kendo-chart-series>
+  </kendo-chart>
+
+  <kendo-datapager [total]="totalGroups" [pageSize]="pageSize" [skip]="skip" (pageChange)="onPageChange($event)">
+
+
+
+  </kendo-datapager>
+</div>

@@ -1,0 +1,49 @@
+<kendo-grid [data]="view | async" [filterable]="true" [pageSize]="gridState.take" [skip]="gridState.skip"
+  [sort]="gridState.sort" [pageable]="true" [sortable]="true" (dataStateChange)="onStateChange($event)"
+  (edit)="editHandler($event)" (cancel)="cancelHandler($event)" (save)="saveHandler($event)"
+  (remove)="removeHandler($event)" (add)="addHandler($event)" [navigable]="true">
+  <ng-template kendoGridToolbarTemplate>
+    <button kendoGridAddCommand>新增</button>
+    <button kendoButton (click)="clearFilter()">清除刪選條件</button>
+  </ng-template>
+  <kendo-grid-column field="name" title="設備名稱"></kendo-grid-column>
+  <kendo-grid-column field="device_group" title="群組"></kendo-grid-column>
+  <!-- <ng-template kendoGridEditTemplate let-dataItem="dataItem" let-formGroup="formGroup"> -->
+    <!-- <kendo-textbox #textbox [formControl]="formGroup.get('password')" placeholder="Password"
+                [clearButton]="true">
+                <ng-template kendoTextBoxSuffixTemplate>
+                    <button kendoButton look="clear" [icon]="'eye'" (click)="toggleVisibility()"></button>
+                </ng-template>
+            </kendo-textbox> -->
+  <!-- </ng-template> -->
+  <!-- <ng-template kendoGridCellTemplate let-dataItem>
+    *****
+  </ng-template> -->
+  <!-- </kendo-grid-column> -->
+  <!-- <kendo-grid-column field="auth" title="驗證"> -->
+  <!-- <ng-template kendoGridEditTemplate let-formGroup="formGroup">
+            <input type="checkbox" kendoCheckBox [formControl]="formGroup.get('auth')" />
+        </ng-template>
+        <ng-template kendoGridCellTemplate let-dataItem let-formGroup="formGroup">
+            <ng-container *ngIf="dataItem.auth; else elseTemplate">
+                啟動
+            </ng-container>
+            <ng-template #elseTemplate>
+                關閉
+            </ng-template>
+
+        </ng-template> -->
+  <!-- </kendo-grid-column> -->
+  <kendo-grid-command-column title="command" [width]="220">
+    <ng-template kendoGridCellTemplate let-isNew="isNew">
+      <button kendoGridEditCommand [primary]="true">編輯</button>
+      <button kendoGridRemoveCommand>刪除</button>
+      <button kendoGridSaveCommand [disabled]="formGroup?.invalid">
+        {{ isNew ? "新增" : "更新" }}
+      </button>
+      <button kendoGridCancelCommand>
+        {{ isNew ? "取消" : "取消" }}
+      </button>
+    </ng-template>
+  </kendo-grid-command-column>
+</kendo-grid>

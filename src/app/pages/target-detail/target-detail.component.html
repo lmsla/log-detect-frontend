@@ -1,0 +1,37 @@
+<kendo-grid [data]="view | async" [pageSize]="gridState.take" [skip]="gridState.skip" [sort]="gridState.sort"
+  [pageable]="true" [sortable]="true" (dataStateChange)="onStateChange($event)" (edit)="editHandler($event)"
+  (cancel)="cancelHandler($event)" (save)="saveHandler($event)" (remove)="removeHandler($event)"
+  (add)="addHandler($event)" [navigable]="true">
+  <ng-template kendoGridToolbarTemplate>
+    <button kendoGridAddCommand>新增</button>
+  </ng-template>
+  <kendo-grid-column field="id" title="日誌名稱">
+    <ng-template kendoGridEditTemplate let-formGroup="formGroup">
+      <kendo-dropdownlist textField="logname" valueField="id" (valueChange)="lognameDropdownValueChange($event)"
+        [valuePrimitive]="true" [data]="dropdownSource" [formControl]="formGroup.get('id')">
+      </kendo-dropdownlist>
+    </ng-template>
+    <ng-template kendoGridCellTemplate let-formGroup="formGroup" let-dataItem>
+      {{dataItem.logname}}
+    </ng-template>
+  </kendo-grid-column>
+
+  <kendo-grid-column field="pattern" [editable]="false" title="index-pattern">
+    <ng-template kendoGridCellTemplate let-dataItem>
+      {{ dataItem.pattern }}
+    </ng-template>
+  </kendo-grid-column>
+
+  <kendo-grid-command-column title="編輯操作" [width]="200">
+    <ng-template kendoGridCellTemplate let-isNew="isNew">
+      <button kendoGridEditCommand [primary]="true">編輯</button>
+      <button kendoGridRemoveCommand>刪除</button>
+      <button kendoGridSaveCommand [disabled]="formGroup?.invalid">
+        {{ isNew ? "新增" : "更新" }}
+      </button>
+      <button kendoGridCancelCommand>
+        {{ isNew ? "取消" : "取消" }}
+      </button>
+    </ng-template>
+  </kendo-grid-command-column>
+</kendo-grid>

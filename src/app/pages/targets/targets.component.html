@@ -1,0 +1,45 @@
+<div>
+  <kendo-grid [data]="view | async" [pageSize]="gridState.take" [skip]="gridState.skip" [sort]="gridState.sort"
+    style="width: 80%;" [pageable]="true" [sortable]="true" (dataStateChange)="onStateChange($event)"
+    (edit)="editHandler($event)" (cancel)="cancelHandler($event)" (save)="saveHandler($event)"
+    (remove)="removeHandler($event)" (add)="addHandler($event)" [navigable]="true">
+    <ng-template kendoGridToolbarTemplate>
+      <button kendoGridAddCommand>新增</button>
+    </ng-template>
+    <kendo-grid-column field="subject" title="標的名稱"></kendo-grid-column>
+    <kendo-grid-column field="to" title="管理者(可多位)" [width]="350">
+      <!-- 編輯時顯示的位置 -->
+      <ng-template kendoGridEditTemplate let-dataItem="dataItem" let-formGroup="formGroup">
+        <!-- {{dataItem|json}} {{formGroup.value|json}} -->
+        <kendo-multiselect [allowCustom]="true" [formControl]="formGroup.get('to')">
+        </kendo-multiselect>
+      </ng-template>
+      <!-- 平時顯示的位置 -->
+      <ng-template kendoGridCellTemplate let-dataItem>
+        <kendo-chiplist size="small">
+          <kendo-chip [size]="'medium'" [rounded]="'full'" [fillMode]="'solid'" [themeColor]="'base'"
+            [removable]="false" *ngFor="let email of dataItem.to" [label]="email">
+          </kendo-chip>
+        </kendo-chiplist>
+      </ng-template>
+    </kendo-grid-column>
+
+    <kendo-grid-command-column title="編輯操作" [width]="200">
+      <ng-template kendoGridCellTemplate let-isNew="isNew">
+        <button kendoGridEditCommand [primary]="true">編輯</button>
+        <button kendoGridRemoveCommand>刪除</button>
+        <button kendoGridSaveCommand [disabled]="formGroup?.invalid">
+          {{ isNew ? "新增" : "更新" }}
+        </button>
+        <button kendoGridCancelCommand>
+          {{ isNew ? "取消" : "取消" }}
+        </button>
+      </ng-template>
+    </kendo-grid-command-column>
+    <div *kendoGridDetailTemplate="let dataItem">
+          <app-target-detail [targets]="dataItem"></app-target-detail>
+      </div>
+  </kendo-grid>
+
+
+</div>

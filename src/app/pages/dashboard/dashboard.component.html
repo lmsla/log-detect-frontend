@@ -1,0 +1,16 @@
+
+<div style="width: 100%; height: 850px;">
+<kendo-tabstrip (tabSelect)="onTabSelect($event)">
+  <kendo-tabstrip-tab [title]="'設備群組'">
+    <ng-template kendoTabContent class="full-width-tabstrip" >
+      <app-device></app-device>
+    </ng-template>
+  </kendo-tabstrip-tab>
+
+  <kendo-tabstrip-tab [title]="'失聯日誌監控'">
+    <ng-template kendoTabContent class="full-width-tabstrip">
+      <app-logdetail></app-logdetail>
+    </ng-template>
+  </kendo-tabstrip-tab>
+</kendo-tabstrip>
+</div>

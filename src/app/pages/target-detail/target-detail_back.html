@@ -1,0 +1,57 @@
+<kendo-grid [data]="view | async" [pageSize]="gridState.take" [skip]="gridState.skip" [sort]="gridState.sort"
+  [pageable]="true" [sortable]="true" (dataStateChange)="onStateChange($event)" (edit)="editHandler($event)"
+  (cancel)="cancelHandler($event)" (save)="saveHandler($event)" (remove)="removeHandler($event)"
+  (add)="addHandler($event)" [navigable]="true">
+  <ng-template kendoGridToolbarTemplate>
+    <button kendoGridAddCommand>新增</button>
+  </ng-template>
+  <kendo-grid-column field="logname" title="日誌名稱"></kendo-grid-column>
+  <kendo-grid-column field="pattern" title="index-pattern"></kendo-grid-column>
+
+  <kendo-grid-column field="id" title="設備群組" [width]="200">
+    <ng-template kendoGridEditTemplate let-formGroup="formGroup">
+      <!-- {{formGroup|json}} {{"d"}} -->
+      <kendo-dropdownlist textField="device_group" valueField="device_group"
+        (valueChange)="groupDropdownValueChange($event)" [valuePrimitive]="true" [data]="groupDropdownSource"
+        [formControl]="formGroup.get('device_group')">
+      </kendo-dropdownlist>
+    </ng-template>
+    <ng-template kendoGridCellTemplate let-formGroup="formGroup" let-dataItem>
+      {{dataItem.device_group}}
+    </ng-template>
+  </kendo-grid-column>
+
+  <!-- <kendo-grid-column field="device_group" title="設備群組"></kendo-grid-column> -->
+  <!-- 如果欄位值是 int editor="numeric" format="n0" -->
+  <kendo-grid-column field="unit" editor="numeric" title="時間" format="n0"></kendo-grid-column>
+  <!-- <kendo-grid-column field="period" title="單位"></kendo-grid-column> -->
+
+  <kendo-grid-column title="單位">
+    <ng-template kendoGridEditTemplate let-formGroup>
+      <kendo-dropdownlist [data]="periods" textField="label" valueField="value" [valuePrimitive]="true" [formControl]="formGroup.get('period')"
+        (valueChange)="updatePeriodValue($event)" style="width: 100%">
+      </kendo-dropdownlist>
+    </ng-template>
+    <ng-template kendoGridCellTemplate let-dataItem>
+      {{ timeconvert(dataItem.period) }}
+    </ng-template>
+  </kendo-grid-column>
+
+
+  <kendo-grid-column field="field" title="欄位"></kendo-grid-column>
+  <!-- <kendo-grid-column field="filter_condition" title="過濾原因">
+    </kendo-grid-column> -->
+
+  <kendo-grid-command-column title="編輯操作" [width]="200">
+    <ng-template kendoGridCellTemplate let-isNew="isNew">
+      <button kendoGridEditCommand [primary]="true">編輯</button>
+      <button kendoGridRemoveCommand>刪除</button>
+      <button kendoGridSaveCommand [disabled]="formGroup?.invalid">
+        {{ isNew ? "新增" : "更新" }}
+      </button>
+      <button kendoGridCancelCommand>
+        {{ isNew ? "取消" : "取消" }}
+      </button>
+    </ng-template>
+  </kendo-grid-command-column>
+</kendo-grid>

@@ -1,0 +1,86 @@
+<div style="margin-left:50px;margin-right:50px;margin-bottom:20px" [formGroup]="data">
+  <div class="schedule-detail-container">
+      <div class="schedule-detail-label">
+          <kendo-label text="標的名稱"></kendo-label>
+      </div>
+      <div class="schedule-detail-textbox">
+          <kendo-textbox formControlName="subject"></kendo-textbox>
+      </div>
+  </div>
+
+  <!-- <div class="schedule-detail-container">
+      <div class="schedule-detail-label">
+          <kendo-label text="時間設定"></kendo-label>
+      </div>
+      <div class="schedule-detail-textbox">
+          <kendo-textbox formControlName="cron_time"></kendo-textbox>
+      </div>
+  </div> -->
+
+  <div class="schedule-detail-container">
+      <div class="schedule-detail-label">
+          <kendo-label text="收件者"></kendo-label>
+      </div>
+      <div class="schedule-detail-textbox">
+          <!-- TODO Eric 這個屬性和 Schedule 物件  不同 須再討論 大寫開頭 應該為小寫 -->
+          <kendo-multiselect [allowCustom]="true" formControlName="to">
+          </kendo-multiselect>
+      </div>
+  </div>
+
+  <div class="schedule-detail-container">
+      <div class="schedule-detail-label">
+          <kendo-label text="副本"></kendo-label>
+      </div>
+      <div class="schedule-detail-textbox">
+          <!-- TODO Eric 這個屬性和 Schedule 物件  不同 須再討論 大寫開頭 應該為小寫 -->
+          <kendo-multiselect [allowCustom]="true" formControlName="CC">
+          </kendo-multiselect>
+      </div>
+  </div>
+
+  <div class="schedule-detail-container">
+      <div class="schedule-detail-label">
+          <kendo-label text="密件副本"></kendo-label>
+      </div>
+      <div class="schedule-detail-textbox">
+
+          <!-- TODO Eric 這個屬性和 Schedule 物件  不同 須再討論 大寫開頭 應該為小寫 -->
+          <kendo-multiselect [allowCustom]="true" formControlName="BCC">
+          </kendo-multiselect>
+      </div>
+  </div>
+
+  <div class="schedule-detail-container">
+      <div class="schedule-detail-label">
+          <kendo-label text="主旨"></kendo-label>
+      </div>
+      <div class="schedule-detail-textbox">
+          <!-- <kendo-textbox formControlName="subject"></kendo-textbox>
+              TODO  Eric 待討論 增加的欄位 要怎麼配合後端給
+          -->
+          <!-- <kendo-textbox></kendo-textbox> -->
+      </div>
+  </div>
+
+  <div class="schedule-detail-container">
+      <div class="schedule-detail-label">
+          <kendo-label text="內文"></kendo-label>
+      </div>
+      <div class="schedule-detail-textbox">
+      </div>
+  </div>
+  <div>
+      <!-- <kendo-textarea formControlName="content" [rows]="3" resizable="vertical"></kendo-textarea>
+      TODO  Eric 待討論 增加的欄位 要怎麼配合後端給
+      -->
+      <!-- <kendo-textarea [rows]="3" resizable="vertical"></kendo-textarea> -->
+
+
+  </div>
+  <kendo-dialog-actions>
+      <div style="display: flex; justify-content: flex-end;">
+          <button kendoButton themeColor="primary" [disabled]="!data.valid" (click)="save()">存檔</button>
+      </div>
+  </kendo-dialog-actions>
+</div>

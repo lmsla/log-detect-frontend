@@ -1,0 +1,10 @@
+<h2>群組概覽</h2>
+<div class="data-container">
+  <div *ngFor="let device of devices" class="data-item">
+    <div class="featured-circle bg-balck shadow-lg">
+      <p class="featured-text"><span class="featured-number">{{device.devices_count}}</span><br>
+        {{device.device_group}}
+      </p>
+    </div>
+  </div>
+</div>
