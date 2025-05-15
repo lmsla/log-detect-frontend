@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { HeroService } from '../../services/hero.service';
 import { DeviceCount } from '../../models/device_count';
 import { Router } from "@angular/router";
@@ -9,7 +9,7 @@ import { Router } from "@angular/router";
   templateUrl: './device.component.html',
   styleUrls: ['./device.component.css']
 })
-export class DeviceComponent {
+export class DeviceComponent implements OnInit {
 
 
   devices: DeviceCount[] = [];

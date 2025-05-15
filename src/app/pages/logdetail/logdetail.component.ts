@@ -102,7 +102,7 @@ export class LogdetailComponent implements OnInit {
 
     const selectedLogname = event; // 提取 logname 字段的值
 
-    console.log("event", event)
+    // console.log("event", event)
     // // 查找與事件相符的設備群組
     const selectedDeviceGroup = this.dropdownSource.find(x => x.logname === selectedLogname);
 
@@ -159,12 +159,15 @@ export class LogdetailComponent implements OnInit {
   public gethpColor(item: any): string {
     // console.log('getColor value:', item);
     // 根據 value 的值返回相應的顏色
-    // console.log("item", item)
     // console.log("item.value.Lost", item.value.value)
     if (item.value.value === 'true') {
       return '#CC0033'; // 紅色
-    } else {
+    } else if (item.value.value === 'false') {
       return '#339933'; // 綠色
+    } else if (item.value.value === 'none'){
+      return 'rgb(116, 112, 112)'; // 白色
+    } else{
+      return '	#FFFFFF'; // 白色
     }
   }
 
@@ -174,12 +177,16 @@ export class LogdetailComponent implements OnInit {
   public getColor(item: any): string {
     // console.log('getColor value:', item);
     // 根據 value 的值返回相應的顏色
-    // console.log("item", item)
-    // console.log("item.value.Lost", item.value.value)
+    // console.log("item1", item.lost)
+    // console.log("item.value.Lost", item.value)
     if (item.lost === 'true') {
       return '#CC0033'; // 紅色
-    } else {
+    } else if (item.lost === 'false') {
       return '#339933'; // 綠色
+    } else if (item.lost === 'none'){
+      return '	#FFFFFF'; // 白色
+    } else{
+      return '	#FFFFFF'; // 白色
     }
   }
 
