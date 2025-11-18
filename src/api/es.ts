@@ -187,25 +187,21 @@ export async function listEsAlerts(params: ListEsAlertsParams = {}): Promise<ESA
   }
 }
 
-export async function getEsAlert(monitorId: number, alertTime: string): Promise<ESAlert> {
-  const { data } = await http.get(`/api/v1/elasticsearch/alerts/${monitorId}`, {
-    params: { alert_time: alertTime },
-  })
+export async function getEsAlert(id: number): Promise<ESAlert> {
+  const { data } = await http.get(`/api/v1/elasticsearch/alerts/${id}`)
   return unwrap<ESAlert>(data)
 }
 
-export async function resolveEsAlert(monitorId: number, alertTime: string, resolutionNote?: string, resolvedBy?: string): Promise<void> {
-  await http.post(`/api/v1/elasticsearch/alerts/${monitorId}/resolve`, {
-    alert_time: alertTime,
+export async function resolveEsAlert(id: number, resolutionNote?: string): Promise<void> {
+  await http.post(`/api/v1/elasticsearch/alerts/${id}/resolve`, {
     resolution_note: resolutionNote,
-    resolved_by: resolvedBy,
   })
 }
 
-export async function acknowledgeEsAlert(monitorId: number, alertTime: string, acknowledgedBy?: string): Promise<void> {
-  await http.put(`/api/v1/elasticsearch/alerts/${monitorId}/acknowledge`, {
-    alert_time: alertTime,
+export async function acknowledgeEsAlert(id: number, acknowledgedBy?: string, note?: string): Promise<void> {
+  await http.put(`/api/v1/elasticsearch/alerts/${id}/acknowledge`, {
     acknowledged_by: acknowledgedBy,
+    note: note,
   })
 }
 
