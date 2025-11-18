@@ -1,4 +1,4 @@
-import { Button, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Table, Typography, message, AutoComplete, Alert, Tooltip } from 'antd'
+import { Button, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Table, Typography, message, AutoComplete, Alert, Tooltip, Tag } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import {
   createIndex,
@@ -13,6 +13,7 @@ import {
 import useDebouncedValue from '@/hooks/useDebouncedValue'
 import useAutoPageSize from '@/hooks/useAutoPageSize'
 import { getDeviceGroups } from '@/api/devices'
+import { getAllESConnections, type ESConnection } from '@/api/esConnection'
 
 const PERIOD_OPTIONS = ['minutes', 'hours', 'days']
 
@@ -29,6 +30,7 @@ export default function Indices() {
   const [msgApi, contextHolder] = message.useMessage()
   const { ref: tableWrapRef, pageSize } = useAutoPageSize({ min: 8 })
   const [groups, setGroups] = useState<string[]>([])
+  const [esConnections, setEsConnections] = useState<ESConnection[]>([])
 
   const filtered = useMemo(() => {
     const kw = debouncedKw.trim().toLowerCase()
@@ -40,10 +42,16 @@ export default function Indices() {
   const load = async () => {
     setLoading(true)
     try {
-      const [indices, ln, groupObjs] = await Promise.all([getAllIndices(), getLognames(), getDeviceGroups()])
+      const [indices, ln, groupObjs, connections] = await Promise.all([
+        getAllIndices(),
+        getLognames(),
+        getDeviceGroups(),
+        getAllESConnections()
+      ])
       setData(indices)
       setLognames((ln || []).map((x: LogName) => x.logname))
       setGroups(groupObjs.map((g) => g.device_group))
+      setEsConnections(connections)
     } catch (e: any) {
       msgApi.error(e?.message || '載入索引失敗')
     } finally {
@@ -165,17 +173,29 @@ export default function Indices() {
         columns={[
           // { title: 'ID', dataIndex: 'id', width: 80 },
           { title: 'Index Pattern', dataIndex: 'pattern' },
-          { title: '設備群組', dataIndex: 'device_group' },
-          { title: 'Logname', dataIndex: 'logname' },
-          { title: '時間週期', dataIndex: 'period', width: 120 },
-          { title: '數量', dataIndex: 'unit', width: 100 },
-          { title: 'Field', dataIndex: 'field' },
-          
+          { title: '設備群組', dataIndex: 'device_group', width: 120 },
+          { title: 'Logname', dataIndex: 'logname', width: 120 },
+          { title: '時間週期', dataIndex: 'period', width: 100 },
+          { title: '數量', dataIndex: 'unit', width: 80 },
+          { title: 'Field', dataIndex: 'field', width: 140 },
+          {
+            title: 'ES 連接',
+            dataIndex: 'es_connection',
+            width: 160,
+            render: (conn: any) => {
+              if (!conn) return <Tag>默認連接</Tag>
+              return (
+                <Tooltip title={`${conn.host}:${conn.port}`}>
+                  <Tag color="blue">{conn.name}</Tag>
+                </Tooltip>
+              )
+            }
+          },
           {
             title: '操作',
-            width: 200,
+            width: 160,
             render: (_, record) => (
-              <Space>
+              <Space size="small">
                 <Button size="small" onClick={() => openEdit(record)}>
                   編輯
                 </Button>
@@ -224,8 +244,25 @@ export default function Indices() {
           <Form.Item label="Field" name="field" rules={[{ required: true, message: '請輸入 field' }]}>
             <Input placeholder="host.keyword" />
           </Form.Item>
-          
+          <Form.Item label="ES 連接" name="es_connection_id" extra="留空使用默認連接">
+            <Select
+              allowClear
+              placeholder="選擇 ES 連接（留空使用默認）"
+              options={esConnections.map((conn) => ({
+                label: (
+                  <Space>
+                    <span>{conn.name}</span>
+                    {conn.is_default && <Tag color="blue">默認</Tag>}
+                  </Space>
+                ),
+                value: conn.id
+              }))}
+            />
+          </Form.Item>
         </Form>
+        <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>
+          提示：若未指定 ES 連接，系統將使用默認的 ES 連接。可在「ES 連接」頁面管理連接配置。
+        </Typography.Paragraph>
       </Modal>
     </Space>
   )

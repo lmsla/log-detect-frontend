@@ -202,10 +202,10 @@ export default function EsAlerts() {
       const values = await actionForm.validateFields()
       setActionLoading(true)
       if (actionModal.type === 'resolve') {
-        await resolveEsAlert(actionModal.alert.monitor_id, actionModal.alert.time, values.resolution_note, values.resolved_by)
+        await resolveEsAlert(actionModal.alert.id, values.resolution_note)
         msgApi.success('已標記為已解決')
       } else {
-        await acknowledgeEsAlert(actionModal.alert.monitor_id, actionModal.alert.time, values.acknowledged_by)
+        await acknowledgeEsAlert(actionModal.alert.id, values.acknowledged_by, values.note)
         msgApi.success('已標記為已確認')
       }
       closeActionModal()
@@ -384,7 +384,7 @@ export default function EsAlerts() {
 
       <Card>
         <Table<ESAlert>
-          rowKey={(record) => `${record.monitor_id}-${record.time}`}
+          rowKey={(record) => String(record.id)}
           columns={columns}
           dataSource={alerts}
           loading={loading}
@@ -414,18 +414,18 @@ export default function EsAlerts() {
         </Typography.Paragraph>
         <Form form={actionForm} layout="vertical">
           {actionModal?.type === 'resolve' ? (
+            <Form.Item label="處理說明" name="resolution_note">
+              <Input.TextArea rows={3} placeholder="可選，記錄處理方式" />
+            </Form.Item>
+          ) : (
             <>
-              <Form.Item label="處理說明" name="resolution_note">
-                <Input.TextArea rows={3} placeholder="可選，記錄處理方式" />
-              </Form.Item>
-              <Form.Item label="處理人" name="resolved_by">
+              <Form.Item label="確認人" name="acknowledged_by">
                 <Input placeholder="預設為當前登入者，可視需要覆寫" />
               </Form.Item>
+              <Form.Item label="備註" name="note">
+                <Input.TextArea rows={2} placeholder="可選，記錄備註" />
+              </Form.Item>
             </>
-          ) : (
-            <Form.Item label="確認人" name="acknowledged_by">
-              <Input placeholder="預設為當前登入者，可視需要覆寫" />
-            </Form.Item>
           )}
         </Form>
       </Modal>

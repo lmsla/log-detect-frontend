@@ -15,6 +15,7 @@ import EsIndices from '@/pages/es/Indices'
 import EsShards from '@/pages/es/Shards'
 import EsAlerts from '@/pages/es/Alerts'
 import EsMonitors from '@/pages/es/Monitors'
+import EsConnections from '@/pages/es/Connections'
 
 function PrivateRoute() {
   return isAuthenticated() ? <Outlet /> : <Navigate to="/login" replace />
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/m/es/shards" element={<EsShards />} />
           <Route path="/m/es/alerts" element={<EsAlerts />} />
           <Route path="/m/es/monitors" element={<EsMonitors />} />
+          <Route path="/m/es/connections" element={<EsConnections />} />
           <Route path="/m/system/users" element={<Users />} />
 
           {/* Backward compatibility redirects */}

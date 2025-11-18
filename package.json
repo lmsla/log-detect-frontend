@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "gen:api": "openapi --input ../log-detect-backend/docs/openapi.yml --output src/api/generated --client axios --name LogDetectApi",
+    "gen:api": "openapi --input docs/openapi.yml --output src/api/generated --client axios --name LogDetectApi",
     "postgen:api": "node scripts/patch-openapi-request.mjs"
   },
   "dependencies": {

@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CommonFields } from './CommonFields';
+import type { ESConnectionSummary } from './ESConnectionSummary';
 import type { Target } from './Target';
 export type Index = (CommonFields & {
     /**
@@ -33,6 +34,14 @@ export type Index = (CommonFields & {
      * Field to monitor
      */
     field: string;
+    /**
+     * ES Connection ID (null means use default connection)
+     */
+    es_connection_id?: number | null;
+    /**
+     * Associated ES Connection details
+     */
+    es_connection?: ESConnectionSummary | null;
     /**
      * Associated targets
      */
