@@ -20,8 +20,7 @@ OpenAPI.BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:
 
 // Provide token dynamically before each request
 OpenAPI.TOKEN = async () => {
-  const token = getToken()
-  return token || undefined
+  return getToken() || ''
 }
 
 // Export everything from generated client (services, models, helper types)

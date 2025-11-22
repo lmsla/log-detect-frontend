@@ -109,7 +109,8 @@ export default function Devices() {
     try {
       const values = await form.validateFields()
       if (editing?.id) {
-        await updateDevice({ id: editing.id, ...values })
+        const { id: _omit, ...rest } = values as any
+        await updateDevice({ ...rest, id: editing.id })
         msgApi.success('更新成功')
       } else {
         await createDevices([{ ...values }])

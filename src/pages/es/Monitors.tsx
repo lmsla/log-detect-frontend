@@ -19,11 +19,12 @@ export default function EsMonitors() {
   const [editing, setEditing] = useState<ESMonitor | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [q, setQ] = useState('')
-  const [form] = Form.useForm<ESMonitor>()
+  const [form] = Form.useForm<ESMonitor & { check_types?: string[] }>()
   const [notifForm] = Form.useForm()
   const [msgApi, contextHolder] = message.useMessage()
   const authEnabled = Form.useWatch('enable_auth', form) as boolean | undefined
   const [notifOpen, setNotifOpen] = useState(false)
+  const [notifTarget, setNotifTarget] = useState<ESMonitor | null>(null)
 
   const load = async () => {
     setLoading(true)

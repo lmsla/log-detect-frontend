@@ -1,5 +1,3 @@
-import type { ItemType } from 'antd/lib/menu/hooks/useItems'
-
 export type ModuleKey = 'log' | 'es' | 'system'
 
 export type ModuleRoute = {
