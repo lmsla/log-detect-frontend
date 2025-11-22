@@ -8,10 +8,12 @@ type Props = {
 }
 
 export default function BulkBar({ count, onClear, onDelete, loading }: Props) {
-  if (count <= 0) return null
   const {
     token: { colorBgContainer, colorBorderSecondary }
   } = theme.useToken()
+
+  if (count <= 0) return null
+
   return (
     <div
       style={{
