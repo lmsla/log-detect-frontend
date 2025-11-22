@@ -42,8 +42,8 @@ export default function App() {
           <Route path="/m/es/shards" element={<EsShards />} />
           <Route path="/m/es/alerts" element={<EsAlerts />} />
           <Route path="/m/es/monitors" element={<EsMonitors />} />
-          <Route path="/m/es/connections" element={<EsConnections />} />
           <Route path="/m/system/users" element={<Users />} />
+          <Route path="/m/system/es-connections" element={<EsConnections />} />
 
           {/* Backward compatibility redirects */}
           <Route path="/devices" element={<Navigate to="/m/log/devices" replace />} />

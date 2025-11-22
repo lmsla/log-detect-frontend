@@ -42,7 +42,6 @@ export const modules: ModuleDef[] = [
       { key: 'shards', path: '/m/es/shards', label: 'Shards', group: 'monitor', icon: 'PartitionOutlined' },
       { key: 'alerts', path: '/m/es/alerts', label: '告警', group: 'monitor', icon: 'AlertOutlined' },
       { key: 'monitors', path: '/m/es/monitors', label: '監控配置', group: 'settings', icon: 'SettingOutlined' },
-      { key: 'connections', path: '/m/es/connections', label: 'ES 連接', group: 'settings', icon: 'ApiOutlined' },
     ]
   },
   {
@@ -52,6 +51,7 @@ export const modules: ModuleDef[] = [
     defaultPath: '/m/system/users',
     routes: [
       { key: 'users', path: '/m/system/users', label: '使用者', group: 'settings', icon: 'TeamOutlined' },
+      { key: 'es-connections', path: '/m/system/es-connections', label: 'ES 連接', group: 'settings', icon: 'ApiOutlined' },
     ]
   },
 ]
