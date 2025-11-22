@@ -44,9 +44,9 @@ export default function Devices() {
     setLoading(true)
     try {
       const [devices, groupObjs, countsData] = await Promise.all([getAllDevices(), getDeviceGroups(), getDeviceCounts()])
-      setData(devices)
-      setGroups(groupObjs.map((g) => g.device_group))
-      setCounts(countsData)
+      setData(devices || [])
+      setGroups((groupObjs || []).map((g) => g.device_group))
+      setCounts(countsData || [])
     } catch (e: any) {
       msgApi.error(e?.message || '載入設備失敗')
     } finally {
