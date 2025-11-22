@@ -134,38 +134,6 @@ export class ElasticsearchMonitoringService {
         });
     }
     /**
-     * Test ES Connection
-     * Test connection to an existing Elasticsearch monitor configuration
-     * @param id Monitor ID
-     * @returns any Connection test successful
-     * @throws ApiError
-     */
-    public postApiV1ElasticsearchMonitorsTest(
-        id: number,
-    ): CancelablePromise<{
-        success?: boolean;
-        msg?: string;
-        body?: {
-            cluster_name?: string;
-            cluster_status?: string;
-            status?: string;
-            response_time?: number;
-        };
-    }> {
-        return this.httpRequest.request({
-            method: 'POST',
-            url: '/api/v1/elasticsearch/monitors/{id}/test',
-            path: {
-                'id': id,
-            },
-            errors: {
-                400: `Connection failed`,
-                401: `Unauthorized`,
-                404: `Monitor not found`,
-            },
-        });
-    }
-    /**
      * Toggle ES Monitor
      * Enable or disable an Elasticsearch monitoring configuration
      * @param id Monitor ID

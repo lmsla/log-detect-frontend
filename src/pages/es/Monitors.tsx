@@ -6,14 +6,15 @@ import {
   updateEsMonitor,
   deleteEsMonitor,
   toggleEsMonitor,
-  testEsMonitor,
   type ESMonitor
 } from '@/api/es'
+import { getAllESConnections, type ESConnectionSummary } from '@/api/esConnection'
 import PageHeader from '@/components/PageHeader'
 import { MailOutlined } from '@ant-design/icons'
 
 export default function EsMonitors() {
   const [data, setData] = useState<ESMonitor[]>([])
+  const [esConnections, setEsConnections] = useState<ESConnectionSummary[]>([])
   const [loading, setLoading] = useState(false)
   const [forbidden, setForbidden] = useState(false)
   const [editing, setEditing] = useState<ESMonitor | null>(null)
@@ -22,15 +23,15 @@ export default function EsMonitors() {
   const [form] = Form.useForm<ESMonitor & { check_types?: string[] }>()
   const [notifForm] = Form.useForm()
   const [msgApi, contextHolder] = message.useMessage()
-  const authEnabled = Form.useWatch('enable_auth', form) as boolean | undefined
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifTarget, setNotifTarget] = useState<ESMonitor | null>(null)
 
   const load = async () => {
     setLoading(true)
     try {
-      const list = await listEsMonitors()
-      setData(list)
+      const [list, connections] = await Promise.all([listEsMonitors(), getAllESConnections()])
+      setData(list || [])
+      setEsConnections(connections || [])
       setForbidden(false)
     } catch (e: any) {
       if (e?.response?.status === 403) {
@@ -47,7 +48,7 @@ export default function EsMonitors() {
 
   const filtered = useMemo(() => {
     const kw = q.trim().toLowerCase()
-    return data.filter((m) => kw ? (m.name?.toLowerCase().includes(kw) || m.host?.toLowerCase().includes(kw)) : true)
+    return data.filter((m) => kw ? (m.name?.toLowerCase().includes(kw) || m.es_connection?.name?.toLowerCase().includes(kw)) : true)
   }, [data, q])
 
   const openCreate = () => {
@@ -126,6 +127,21 @@ export default function EsMonitors() {
     form.setFieldsValue(templates[tpl])
   }
 
+  // 根據 es_connection_id 取得連線名稱
+  const getConnectionName = (id?: number) => {
+    if (!id) return '-'
+    const conn = esConnections.find(c => c.id === id)
+    return conn?.name || `ID: ${id}`
+  }
+
+  // 根據 es_connection_id 取得連線 Host
+  const getConnectionHost = (id?: number) => {
+    if (!id) return '-'
+    const conn = esConnections.find(c => c.id === id)
+    if (!conn) return '-'
+    return `${conn.host}:${conn.port}`
+  }
+
   return (
     <Space direction="vertical" style={{ width: '100%' }} size={12}>
       {contextHolder}
@@ -133,7 +149,7 @@ export default function EsMonitors() {
         title="Elasticsearch 監控配置"
         extra={
           <Space>
-            <Input allowClear placeholder="搜尋名稱/主機" style={{ width: 260 }} onChange={(e) => setQ(e.target.value)} />
+            <Input allowClear placeholder="搜尋名稱/連線" style={{ width: 260 }} onChange={(e) => setQ(e.target.value)} />
             <Button type="primary" onClick={openCreate}>新增監控</Button>
           </Space>
         }
@@ -147,7 +163,7 @@ export default function EsMonitors() {
           extra={<Button onClick={load}>重試</Button>}
         />
       ) : (
-      
+
       <Table<ESMonitor>
         rowKey={(r) => String(r.id ?? Math.random())}
         loading={loading}
@@ -156,9 +172,16 @@ export default function EsMonitors() {
         pagination={{ pageSize: 10, showSizeChanger: false }}
         columns={[
           { title: '名稱', dataIndex: 'name' },
-          { title: 'Host', dataIndex: 'host', render: (v, r) => `${r.host}:${r.port}` },
-          { title: '認證', dataIndex: 'enable_auth', width: 100, render: (v) => v ? <Tag color="blue">Auth</Tag> : '-' },
-          { title: '間隔(秒)', dataIndex: 'interval', width: 110 },
+          {
+            title: 'ES 連線',
+            dataIndex: 'es_connection_id',
+            render: (id, r) => (
+              <Tooltip title={getConnectionHost(id)}>
+                <span>{r.es_connection?.name || getConnectionName(id)}</span>
+              </Tooltip>
+            )
+          },
+          { title: '間隔(秒)', dataIndex: 'interval', width: 100 },
           { title: '檢查', dataIndex: 'check_type', render: (v) => {
               const arr = (v || '').split(',').map((s: string) => s.trim()).filter(Boolean)
               const colorOf = (k: string) => k === 'health' ? 'green' : k === 'performance' ? 'blue' : 'purple'
@@ -170,10 +193,9 @@ export default function EsMonitors() {
               ) : '-'
             }
           },
-          { title: '去重(秒)', dataIndex: 'alert_dedupe_window', width: 110 },
-          { title: '啟用', dataIndex: 'enable_monitor', width: 100, render: (v) => v ? <Tag color="green">ON</Tag> : <Tag>OFF</Tag> },
+          { title: '啟用', dataIndex: 'enable_monitor', width: 80, render: (v) => v ? <Tag color="green">ON</Tag> : <Tag>OFF</Tag> },
           {
-            title: '操作', width: 280,
+            title: '操作', width: 240,
             render: (_, r) => (
               <Space>
                 <Tooltip title={(r.receivers || []).join(', ') || '未設定收件者'}>
@@ -192,7 +214,6 @@ export default function EsMonitors() {
                 <Popconfirm title="確認刪除？" onConfirm={async () => { await deleteEsMonitor(r.id!); msgApi.success('已刪除'); load() }}>
                   <Button size="small" danger>刪除</Button>
                 </Popconfirm>
-                <Button size="small" onClick={async () => { try { const res = await testEsMonitor(r.id!); msgApi.success(`連線成功：${res?.cluster_name || ''}`) } catch (e: any) { msgApi.error(e?.message || '連線失敗') } }}>測試連線</Button>
               </Space>
             )
           }
@@ -213,10 +234,7 @@ export default function EsMonitors() {
           form={form}
           layout="vertical"
           initialValues={{
-            port: 9200,
             interval: 60,
-            enable_auth: false,
-            alert_dedupe_window: 0,
             check_types: ['health'],
             // 標準模板（一般生產環境）
             cpu_usage_high: 75.0,
@@ -232,51 +250,27 @@ export default function EsMonitors() {
         >
           {/* 名稱 */}
           <Row gutter={12}>
-            <Col span={24}>
+            <Col xs={24} md={12}>
               <Form.Item label="名稱" name="name" rules={[{ required: true, message: '請輸入名稱' }]}>
-                <Input placeholder="Production ES Cluster" />
+                <Input placeholder="Production ES Monitor" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="ES 連線" name="es_connection_id" rules={[{ required: true, message: '請選擇 ES 連線' }]}>
+                <Select
+                  placeholder="選擇 ES 連線"
+                  options={esConnections.map(c => ({
+                    label: `${c.name} (${c.host}:${c.port})`,
+                    value: c.id
+                  }))}
+                  showSearch
+                  optionFilterProp="label"
+                />
               </Form.Item>
             </Col>
           </Row>
 
-          {/* Host / Port */}
-          <Row gutter={12}>
-            <Col xs={24} md={16}>
-              <Form.Item label="Host" name="host" rules={[{ required: true, message: '請輸入 Host' }]}>
-                <Input placeholder="es.example.com" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item label="Port" name="port" rules={[{ required: true }]}>
-                <InputNumber min={1} max={65535} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {/* 認證區塊 */}
-          <Row gutter={12}>
-            <Col xs={24} md={8}>
-              <Form.Item label="需要認證" name="enable_auth" valuePropName="checked">
-                <Switch />
-              </Form.Item>
-            </Col>
-            {authEnabled ? (
-              <>
-                <Col xs={24} md={8}>
-                  <Form.Item label="Username" name="username" rules={[{ required: true }]}>
-                    <Input />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={8}>
-                    <Form.Item label="Password" name="password" rules={[{ required: true }]}>
-                    <Input.Password />
-                  </Form.Item>
-                </Col>
-              </>
-            ) : null}
-          </Row>
-
-          {/* 間隔 / 去重 */}
+          {/* 間隔 */}
           <Row gutter={12}>
             <Col xs={24} md={12}>
               <Form.Item label="檢查間隔(秒)" name="interval" rules={[{ required: true, type: 'number', min: 10, max: 3600 }]}>
@@ -284,15 +278,6 @@ export default function EsMonitors() {
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item label="告警去重窗口(秒)" name="alert_dedupe_window" tooltip="同類型告警在該秒數內只發一次（0 表示不去重）">
-                <InputNumber min={0} step={10} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          {/* 其他設定 */}
-          <Row gutter={12}>
-            <Col span={24}>
               <Form.Item label="檢查類型" name="check_types" tooltip="可複選">
                 <Select
                   mode="multiple"
@@ -306,9 +291,11 @@ export default function EsMonitors() {
               </Form.Item>
             </Col>
           </Row>
-          {/* 閾值區塊：操作列 + 9 欄閾值輸入 */}
+
+          {/* 閾值區塊 */}
           <Row gutter={12}>
-            <Col span={24} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+            <Col span={24} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <Typography.Text type="secondary">閾值設定</Typography.Text>
               <Space>
                 <Button onClick={() => setNotifOpen(true)}>通知設定</Button>
                 <Segmented
