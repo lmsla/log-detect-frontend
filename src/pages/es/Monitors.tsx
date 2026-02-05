@@ -25,6 +25,7 @@ export default function EsMonitors() {
   const [msgApi, contextHolder] = message.useMessage()
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifTarget, setNotifTarget] = useState<ESMonitor | null>(null)
+  const [notifSaving, setNotifSaving] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -56,6 +57,31 @@ export default function EsMonitors() {
     form.resetFields()
     notifForm.setFieldsValue({ receivers: [], subject: '', description: '' })
     setDrawerOpen(true)
+  }
+
+  const saveNotifSettings = async () => {
+    if (!notifTarget?.id) {
+      setNotifOpen(false)
+      return
+    }
+    try {
+      const values = await notifForm.validateFields()
+      setNotifSaving(true)
+      await updateEsMonitor({
+        id: notifTarget.id,
+        receivers: values.receivers || [],
+        subject: values.subject || '',
+        description: values.description || ''
+      })
+      msgApi.success('通知設定已儲存')
+      setNotifOpen(false)
+      load()
+    } catch (e: any) {
+      if (e?.errorFields) return
+      msgApi.error(e?.message || '儲存通知設定失敗')
+    } finally {
+      setNotifSaving(false)
+    }
   }
 
   const openEdit = (record: ESMonitor) => {
@@ -201,10 +227,10 @@ export default function EsMonitors() {
                 <Tooltip title={(r.receivers || []).join(', ') || '未設定收件者'}>
                   <Button size="small" icon={<MailOutlined />} onClick={() => {
                     setNotifTarget(r)
-                    notifForm.setFieldsValue({ receivers: r.receivers || [], subject: r.subject || '', description: r.description || '' })
-                    setNotifOpen(true)
-                  }}>
-                    通知
+      notifForm.setFieldsValue({ receivers: r.receivers || [], subject: r.subject || '', description: r.description || '' })
+      setNotifOpen(true)
+    }}>
+      通知
                   </Button>
                 </Tooltip>
                 <Button size="small" onClick={() => openEdit(r)}>編輯</Button>
@@ -275,6 +301,16 @@ export default function EsMonitors() {
             <Col xs={24} md={12}>
               <Form.Item label="檢查間隔(秒)" name="interval" rules={[{ required: true, type: 'number', min: 10, max: 3600 }]}>
                 <InputNumber style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="告警去重時間窗口(秒)"
+                name="alert_dedupe_window"
+                tooltip="同一監控、同類型/嚴重度的告警在此時間內只會發送一次，預設 300 秒"
+                rules={[{ type: 'number', min: 30, max: 86400 }]}
+              >
+                <InputNumber style={{ width: '100%' }} placeholder="預設 300" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
@@ -363,8 +399,9 @@ export default function EsMonitors() {
         title="通知設定"
         open={notifOpen}
         onCancel={() => setNotifOpen(false)}
-        onOk={() => setNotifOpen(false)}
+        onOk={saveNotifSettings}
         okText="完成"
+        confirmLoading={notifSaving}
       >
         <Form form={notifForm} layout="vertical" initialValues={{ receivers: [], subject: '', description: '' }}>
           <Form.Item label="收件者" name="receivers">

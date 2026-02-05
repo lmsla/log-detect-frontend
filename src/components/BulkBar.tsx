@@ -1,13 +1,15 @@
 import { Button, Space, Tag, theme } from 'antd'
+import type { ReactNode } from 'react'
 
 type Props = {
   count: number
   onClear: () => void
   onDelete: () => void
   loading?: boolean
+  extra?: ReactNode
 }
 
-export default function BulkBar({ count, onClear, onDelete, loading }: Props) {
+export default function BulkBar({ count, onClear, onDelete, loading, extra }: Props) {
   const {
     token: { colorBgContainer, colorBorderSecondary }
   } = theme.useToken()
@@ -38,6 +40,7 @@ export default function BulkBar({ count, onClear, onDelete, loading }: Props) {
         </Button>
       </Space>
       <Space>
+        {extra}
         <Button size="small" danger loading={loading} onClick={onDelete}>
           批量刪除
         </Button>

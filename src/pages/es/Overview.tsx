@@ -17,6 +17,11 @@ function ClusterTag({ value }: { value?: string }) {
   return <Tag color={color}>{value || '-'}</Tag>
 }
 
+const fmt = (n: number | undefined | null, digits = 2) => {
+  if (n === null || n === undefined || Number.isNaN(Number(n))) return '-'
+  return Number(n).toFixed(digits)
+}
+
 export default function EsOverview() {
   const [stats, setStats] = useState<ESStatistics | null>(null)
   const [list, setList] = useState<ESMonitorStatus[]>([])
@@ -120,6 +125,18 @@ export default function EsOverview() {
             <Typography.Title level={3} style={{ margin: 0 }}>{stats?.avg_response_time ?? '-'}</Typography.Title>
           </Card>
         </Col>
+        <Col xs={12} md={6}>
+          <Card loading={loading}>
+            <Typography.Text type="secondary">平均 CPU(%)</Typography.Text>
+            <Typography.Title level={3} style={{ margin: 0 }}>{fmt(stats?.avg_cpu_usage)}</Typography.Title>
+          </Card>
+        </Col>
+        <Col xs={12} md={6}>
+          <Card loading={loading}>
+            <Typography.Text type="secondary">平均 Mem(%)</Typography.Text>
+            <Typography.Title level={3} style={{ margin: 0 }}>{fmt(stats?.avg_memory_usage)}</Typography.Title>
+          </Card>
+        </Col>
       </Row>
 
       {/* 清單表 */}
@@ -136,9 +153,9 @@ export default function EsOverview() {
           { title: 'Cluster', dataIndex: 'cluster_name' },
           { title: '健康', dataIndex: 'cluster_status', render: (v) => <ClusterTag value={v} /> },
           { title: 'RT(ms)', dataIndex: 'response_time', width: 100 },
-          { title: 'CPU(%)', dataIndex: 'cpu_usage', width: 100 },
-          { title: 'Mem(%)', dataIndex: 'memory_usage', width: 100 },
-          { title: 'Disk(%)', dataIndex: 'disk_usage', width: 100 },
+          { title: 'CPU(%)', dataIndex: 'cpu_usage', width: 100, render: (v) => fmt(v) },
+          { title: 'Mem(%)', dataIndex: 'memory_usage', width: 100, render: (v) => fmt(v) },
+          { title: 'Disk(%)', dataIndex: 'disk_usage', width: 100, render: (v) => fmt(v) },
           { title: 'Nodes', dataIndex: 'node_count', width: 90 },
           { title: 'Active Shards', dataIndex: 'active_shards', width: 120 },
           { title: 'Unassigned Shards', dataIndex: 'unassigned_shards', width: 120 }

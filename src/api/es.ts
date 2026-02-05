@@ -188,16 +188,18 @@ export async function getEsAlert(id: number): Promise<ESAlert> {
   return unwrap<ESAlert>(data)
 }
 
-export async function resolveEsAlert(id: number, resolutionNote?: string): Promise<void> {
-  await http.post(`/api/v1/elasticsearch/alerts/${id}/resolve`, {
+export async function resolveEsAlert(monitorId: number, alertTime: string, resolutionNote?: string, resolvedBy?: string): Promise<void> {
+  await http.post(`/api/v1/elasticsearch/alerts/${monitorId}/resolve`, {
+    alert_time: alertTime,
     resolution_note: resolutionNote,
+    resolved_by: resolvedBy,
   })
 }
 
-export async function acknowledgeEsAlert(id: number, acknowledgedBy?: string, note?: string): Promise<void> {
-  await http.put(`/api/v1/elasticsearch/alerts/${id}/acknowledge`, {
+export async function acknowledgeEsAlert(monitorId: number, alertTime: string, acknowledgedBy?: string): Promise<void> {
+  await http.put(`/api/v1/elasticsearch/alerts/${monitorId}/acknowledge`, {
+    alert_time: alertTime,
     acknowledged_by: acknowledgedBy,
-    note: note,
   })
 }
 
