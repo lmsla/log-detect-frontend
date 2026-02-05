@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CommonFields } from './CommonFields';
+import type { ESConnectionSummary } from './ESConnectionSummary';
 export type ElasticsearchMonitor = (CommonFields & {
     /**
      * Monitor ID
@@ -13,25 +14,10 @@ export type ElasticsearchMonitor = (CommonFields & {
      */
     name: string;
     /**
-     * Elasticsearch host address
+     * ES 連線 ID（外鍵到 es_connections）
      */
-    host: string;
-    /**
-     * Elasticsearch port
-     */
-    port?: number;
-    /**
-     * Authentication username
-     */
-    username?: string;
-    /**
-     * Authentication password
-     */
-    password?: string;
-    /**
-     * Enable authentication
-     */
-    enable_auth?: boolean;
+    es_connection_id: number;
+    es_connection?: ESConnectionSummary;
     /**
      * Check types (comma-separated)
      */

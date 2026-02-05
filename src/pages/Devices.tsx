@@ -1,6 +1,9 @@
 import { Button, Card, Form, Input, Modal, Popconfirm, Space, Typography, message, Table, Pagination, AutoComplete, Tag, theme } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { createDevices, deleteDevice, getAllDevices, getDeviceGroups, updateDevice, getDeviceCounts, type Device, type DeviceCount } from '@/api/devices'
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { createDevices, deleteDevice, getAllDevices, getDeviceGroups, updateDevice, getDeviceCounts, type Device } from '@/api/devices'
+import { createDeviceGroup, getDeviceGroupsWithCount, updateDeviceGroup, deleteDeviceGroup, type DeviceGroupWithCount } from '@/api/deviceGroups'
+import { http } from '@/api/http'
 import useDebouncedValue from '@/hooks/useDebouncedValue'
 import useAutoPageSize from '@/hooks/useAutoPageSize'
 import PageHeader from '@/components/PageHeader'
@@ -14,7 +17,7 @@ export default function Devices() {
   const { isDark } = useThemeMode()
   const [data, setData] = useState<Device[]>([])
   const [groups, setGroups] = useState<string[]>([])
-  const [counts, setCounts] = useState<DeviceCount[]>([])
+  const [groupStats, setGroupStats] = useState<DeviceGroupWithCount[]>([])
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState<Query>({ keyword: '', group: undefined })
   const [modalOpen, setModalOpen] = useState(false)
@@ -24,6 +27,12 @@ export default function Devices() {
   const [groupDropdownOpen, setGroupDropdownOpen] = useState(false)
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([])
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [groupModalOpen, setGroupModalOpen] = useState(false)
+  const [editingGroup, setEditingGroup] = useState<DeviceGroupWithCount | null>(null)
+  const [groupForm] = Form.useForm<{ name: string; description?: string }>()
+  const [moveModalOpen, setMoveModalOpen] = useState(false)
+  const [moveForm] = Form.useForm<{ target_group_name: string }>()
+  const [moveLoading, setMoveLoading] = useState(false)
   // 右側表格區塊使用分頁，依容器高度自動計算每頁列數（不截斷表格）
   const { ref: tableWrapRef, pageSize } = useAutoPageSize({ rowHeight: 48, headerHeight: 56, paginationHeight: 56, bottomPadding: 6, min: 4, max: 100 })
   // 群組卡片分頁（固定上方區塊高度，不出現滾動條）
@@ -43,10 +52,21 @@ export default function Devices() {
   const load = async () => {
     setLoading(true)
     try {
-      const [devices, groupObjs, countsData] = await Promise.all([getAllDevices(), getDeviceGroups(), getDeviceCounts()])
-      setData(devices)
-      setGroups(groupObjs.map((g) => g.device_group))
-      setCounts(countsData)
+      // 優先使用新群組端點，若失敗則回退舊端點
+      const [devices, groupList] = await Promise.all([
+        getAllDevices(),
+        getDeviceGroupsWithCount().catch(async () => {
+          const legacyGroups = await getDeviceGroups()
+          const legacyCounts = await getDeviceCounts()
+          return (legacyGroups || []).map((g) => ({
+            device_group: (g as any).device_group,
+            device_count: (legacyCounts || []).find((c) => c.device_group === (g as any).device_group)?.devices_count ?? 0
+          })) as DeviceGroupWithCount[]
+        })
+      ])
+      setData(devices || [])
+      setGroups((groupList || []).map((g) => g.name || g.device_group).filter(Boolean) as string[])
+      setGroupStats(groupList || [])
     } catch (e: any) {
       msgApi.error(e?.message || '載入設備失敗')
     } finally {
@@ -84,14 +104,14 @@ export default function Devices() {
   }, [])
 
   const cardsPerPage = Math.max(1, gridCols * gridRows)
-  const totalCardPages = Math.max(1, Math.ceil(counts.length / cardsPerPage))
+  const totalCardPages = Math.max(1, Math.ceil(groupStats.length / cardsPerPage))
   useEffect(() => {
     if (groupPage > totalCardPages) setGroupPage(totalCardPages)
   }, [groupPage, totalCardPages])
   const visibleCounts = useMemo(() => {
     const start = (groupPage - 1) * cardsPerPage
-    return counts.slice(start, start + cardsPerPage)
-  }, [counts, groupPage, cardsPerPage])
+    return groupStats.slice(start, start + cardsPerPage)
+  }, [groupStats, groupPage, cardsPerPage])
 
   const openCreate = () => {
     setEditing(null)
@@ -109,7 +129,8 @@ export default function Devices() {
     try {
       const values = await form.validateFields()
       if (editing?.id) {
-        await updateDevice({ id: editing.id, ...values })
+        const { id: _omit, ...rest } = values as any
+        await updateDevice({ ...rest, id: editing.id })
         msgApi.success('更新成功')
       } else {
         await createDevices([{ ...values }])
@@ -132,6 +153,67 @@ export default function Devices() {
     } catch (e: any) {
       msgApi.error(e?.message || '刪除失敗')
     }
+  }
+
+  const submitGroup = async () => {
+    try {
+      const values = await groupForm.validateFields()
+      if (editingGroup?.id) {
+        await updateDeviceGroup({ id: editingGroup.id, ...values })
+        msgApi.success('已更新群組')
+      } else {
+        await createDeviceGroup(values)
+        msgApi.success('已建立群組')
+      }
+      setGroupModalOpen(false)
+      setEditingGroup(null)
+      groupForm.resetFields()
+      load()
+    } catch (e: any) {
+      if (e?.errorFields) return
+      msgApi.error(e?.message || (editingGroup ? '更新群組失敗' : '建立群組失敗'))
+    }
+  }
+
+  const openCreateGroup = () => {
+    setEditingGroup(null)
+    groupForm.resetFields()
+    setGroupModalOpen(true)
+  }
+
+  const openEditGroup = (group: DeviceGroupWithCount) => {
+    setEditingGroup(group)
+    groupForm.setFieldsValue({ name: group.name || group.device_group || '', description: group.description || '' })
+    setGroupModalOpen(true)
+  }
+
+  const handleDeleteGroup = async (group: DeviceGroupWithCount) => {
+    if (!group.id) return
+    const name = group.name || group.device_group || '群組'
+    const count = group.device_count ?? 0
+    if (count > 0) {
+      msgApi.warning(`「${name}」內仍有 ${count} 台設備，請先移除或轉移設備後再刪除群組。`)
+      return
+    }
+    Modal.confirm({
+      title: '刪除群組',
+      content: `確認刪除「${name}」？`,
+      okType: 'danger',
+      okText: '刪除',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          await deleteDeviceGroup(group.id!)
+          msgApi.success('群組已刪除')
+          if (query.group === (group.name || group.device_group)) {
+            setQuery((q) => ({ ...q, group: undefined }))
+          }
+          load()
+        } catch (e: any) {
+          msgApi.error(e?.message || '刪除群組失敗')
+        }
+      }
+    })
   }
 
   return (
@@ -158,6 +240,13 @@ export default function Devices() {
               onChange={(e) => setQuery((q) => ({ ...q, keyword: e.target.value }))}
               style={{ width: 260 }}
             />
+            <Button
+              type="primary"
+              onClick={openCreateGroup}
+              style={{ backgroundColor: token.colorSuccess, borderColor: token.colorSuccess }}
+            >
+              新增群組
+            </Button>
             <Button type="primary" onClick={openCreate}>
               新增設備
             </Button>
@@ -176,7 +265,7 @@ export default function Devices() {
                 simple
                 size="small"
                 current={groupPage}
-                total={counts.length}
+                total={groupStats.length}
                 pageSize={cardsPerPage}
                 onChange={(p) => setGroupPage(p)}
               />
@@ -195,26 +284,59 @@ export default function Devices() {
             }}
             ref={gridRef}
           >
-            {visibleCounts.map((c) => {
-              const active = query.group === c.device_group
+            {visibleCounts.map((c, idx) => {
+              const groupName = c.name || c.device_group || ''
+              const active = query.group === groupName
+              const key = c.id ? `group-${c.id}` : groupName || `group-${idx}`
               return (
                 <Card
-                  key={c.device_group}
+                  key={key}
                   hoverable
-                  onClick={() => setQuery((q) => ({ ...q, group: active ? undefined : c.device_group }))}
+                  onClick={() => setQuery((q) => ({ ...q, group: active ? undefined : groupName }))}
                   style={{
                     cursor: 'pointer',
                     borderColor: active ? token.colorPrimary : undefined,
                     transition: 'border-color 0.2s',
-                    background: isDark ? '#304547' : '#F1FAFA'
+                    background: isDark ? '#304547' : '#F1FAFA',
+                    position: 'relative'
                   }}
                 >
-                  <Space direction="vertical" size={2} style={{ width: '100%' }}>
+                  {c.id && (
+                    <Space
+                      size={4}
+                      style={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={() => openEditGroup(c)}
+                      />
+                      <Button
+                        type="text"
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleDeleteGroup(c)}
+                      />
+                    </Space>
+                  )}
+                  <Space direction="vertical" size={2} style={{ width: '100%', paddingTop: 8 }}>
                     {/* <Typography.Text type="secondary">設備群組</Typography.Text> */}
                     <Typography.Title level={5} style={{ margin: 0, overflowWrap: 'anywhere' }}>
-                      {c.device_group}
+                      {groupName || '（未命名）'}
                     </Typography.Title>
-                    <Typography.Text>數量：{c.devices_count}</Typography.Text>
+                    {c.description ? (
+                      <Typography.Paragraph
+                        type="secondary"
+                        ellipsis={{ rows: 2, tooltip: c.description }}
+                        style={{ margin: 0 }}
+                      >
+                        {c.description}
+                      </Typography.Paragraph>
+                    ) : null}
+                    <Typography.Text>數量：{c.device_count ?? 0}</Typography.Text>
                   </Space>
                 </Card>
               )
@@ -231,22 +353,42 @@ export default function Devices() {
               onClear={() => setSelectedKeys([])}
               onDelete={async () => {
                 if (!selectedKeys.length) return
-                setBulkLoading(true)
-                try {
-                  const ids = selectedKeys
-                    .map((k) => Number(k))
-                    .filter((n) => Number.isFinite(n))
-                  const results = await Promise.allSettled(ids.map((id) => deleteDevice(id)))
-                  const ok = results.filter((r) => r.status === 'fulfilled').length
-                  const fail = results.length - ok
-                  if (ok) msgApi.success(`已刪除 ${ok} 筆`)
-                  if (fail) msgApi.error(`有 ${fail} 筆刪除失敗`)
-                  setSelectedKeys([])
-                  load()
-                } finally {
-                  setBulkLoading(false)
-                }
+                Modal.confirm({
+                  title: '批量刪除設備',
+                  content: `確認刪除選取的 ${selectedKeys.length} 筆設備？此操作無法復原。`,
+                  okText: '刪除',
+                  okType: 'danger',
+                  cancelText: '取消',
+                  onOk: async () => {
+                    setBulkLoading(true)
+                    try {
+                      const ids = selectedKeys
+                        .map((k) => Number(k))
+                        .filter((n) => Number.isFinite(n))
+                      const results = await Promise.allSettled(ids.map((id) => deleteDevice(id)))
+                      const ok = results.filter((r) => r.status === 'fulfilled').length
+                      const fail = results.length - ok
+                      if (ok) msgApi.success(`已刪除 ${ok} 筆`)
+                      if (fail) msgApi.error(`有 ${fail} 筆刪除失敗`)
+                      setSelectedKeys([])
+                      load()
+                    } finally {
+                      setBulkLoading(false)
+                    }
+                  }
+                })
               }}
+              extra={
+                <Button
+                  disabled={!selectedKeys.length}
+                  onClick={() => {
+                    moveForm.resetFields()
+                    setMoveModalOpen(true)
+                  }}
+                >
+                  批量遷移
+                </Button>
+              }
             />
             <Table<Device>
               rowKey={(r) => String(r.id ?? `${r.device_group}-${r.name}`)}
@@ -305,6 +447,74 @@ export default function Devices() {
           </Form.Item>
           <Form.Item label="名稱" name="name" rules={[{ required: true, message: '請輸入名稱' }]}>
             <Input placeholder="例如：FW-001" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="批量遷移設備"
+        open={moveModalOpen}
+        onCancel={() => setMoveModalOpen(false)}
+        onOk={async () => {
+          try {
+            const values = await moveForm.validateFields()
+            const ids = selectedKeys.map((k) => Number(k)).filter((n) => Number.isFinite(n))
+            if (!ids.length) {
+              msgApi.warning('請先選擇要遷移的設備')
+              return
+            }
+            setMoveLoading(true)
+            await http.post('/api/v1/DeviceGroup/MoveDevices', {
+              device_ids: ids,
+              target_group_name: values.target_group_name
+            })
+            msgApi.success('遷移完成')
+            setMoveModalOpen(false)
+            setSelectedKeys([])
+            load()
+          } catch (e: any) {
+            if (e?.errorFields) return
+            msgApi.error(e?.message || '遷移失敗')
+          } finally {
+            setMoveLoading(false)
+          }
+        }}
+        confirmLoading={moveLoading}
+      >
+        <Typography.Paragraph type="secondary">
+          已選擇 {selectedKeys.length} 台設備，請選擇目標群組進行遷移。
+        </Typography.Paragraph>
+        <Form form={moveForm} layout="vertical">
+          <Form.Item
+            label="目標群組"
+            name="target_group_name"
+            rules={[{ required: true, message: '請選擇或輸入目標群組' }]}
+          >
+            <AutoComplete
+              placeholder="選擇或輸入群組名稱"
+              options={groups.map((g) => ({ value: g }))}
+              filterOption={(inputValue, option) => (option?.value ?? '').toString().toLowerCase().includes(inputValue.toLowerCase())}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingGroup ? '編輯群組' : '新增群組'}
+        open={groupModalOpen}
+        onCancel={() => {
+          setGroupModalOpen(false)
+          setEditingGroup(null)
+        }}
+        onOk={submitGroup}
+        destroyOnClose
+      >
+        <Form form={groupForm} layout="vertical">
+          <Form.Item label="群組名稱" name="name" rules={[{ required: true, message: '請輸入群組名稱' }]}>
+            <Input placeholder="例如：Web Servers" autoFocus />
+          </Form.Item>
+          <Form.Item label="描述" name="description">
+            <Input.TextArea rows={3} placeholder="可填寫備註，選填" />
           </Form.Item>
         </Form>
       </Modal>

@@ -95,7 +95,7 @@ export default function HistoryTimeline({
 
   const colorOf = (lost: string | undefined) => {
     if (lost === 'true') return '#cf1322' // red (offline)
-    if (lost === 'false') return '#8c8c8c' // gray (online)
+    if (lost === 'false') return '#52c41a' // green (online)
     return '#d9d9d9' // none
   }
 

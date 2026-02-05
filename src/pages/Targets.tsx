@@ -66,8 +66,8 @@ export default function Targets() {
       const values = await form.validateFields()
       // 後端多對多關聯：傳送 indices 只需包含 id 即可
       const selectedIndexIds: number[] = (values as any).indices_ids || []
-      const body: Target = {
-        id: editing?.id,
+      const body: Partial<Target> = {
+        ...(editing?.id ? { id: editing.id } : {}),
         subject: values.subject,
         to: values.to || [],
         enable: values.enable ?? true,
@@ -75,10 +75,10 @@ export default function Targets() {
       }
 
       if (editing?.id) {
-        await updateTarget(body)
+        await updateTarget(body as Target)
         msgApi.success('更新成功')
       } else {
-        await createTarget(body)
+        await createTarget(body as Target)
         msgApi.success('新增成功')
       }
       setModalOpen(false)

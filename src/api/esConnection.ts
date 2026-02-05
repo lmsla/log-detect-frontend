@@ -36,15 +36,15 @@ export async function testESConnection(connection: Partial<ESConnection>) {
 
 // Set default ES connection
 export async function setDefaultESConnection(id: number) {
-  return api.esConnectionManagement.postApiV1EsConnectionSetDefault(id)
+  return api.esConnectionManagement.putApiV1EsConnectionSetDefault(id)
 }
 
 // Reload single ES connection
 export async function reloadESConnection(id: number) {
-  return api.esConnectionManagement.postApiV1EsConnectionReload(id)
+  return api.esConnectionManagement.putApiV1EsConnectionReload(id)
 }
 
 // Reload all ES connections
 export async function reloadAllESConnections() {
-  return api.esConnectionManagement.postApiV1EsConnectionReloadAll()
+  return api.esConnectionManagement.putApiV1EsConnectionReloadAll()
 }

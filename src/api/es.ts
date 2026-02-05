@@ -1,4 +1,5 @@
 import { http } from '@/api/http'
+import type { ESConnectionSummary } from './esConnection'
 
 export type ESStatistics = {
   total_monitors: number
@@ -19,7 +20,9 @@ export type ESStatistics = {
 export type ESMonitorStatus = {
   monitor_id: number
   monitor_name: string
-  host: string
+  es_connection_id?: number
+  es_connection_name?: string
+  host: string  // 從 ESConnection 取得
   status: 'online' | 'offline' | 'warning' | 'error' | string
   cluster_status?: 'green' | 'yellow' | 'red' | string
   cluster_name?: string
@@ -67,11 +70,8 @@ export async function getEsStatus(params?: {
 export type ESMonitor = {
   id?: number
   name: string
-  host: string
-  port: number
-  enable_auth?: boolean
-  username?: string
-  password?: string
+  es_connection_id: number  // 外鍵到 es_connections
+  es_connection?: ESConnectionSummary
   check_type?: string // comma separated
   interval: number
   enable_monitor?: boolean
@@ -79,7 +79,6 @@ export type ESMonitor = {
   subject?: string
   description?: string
   alert_threshold?: string
-  alert_dedupe_window?: number
   // thresholds (optional, fallback to defaults on backend)
   cpu_usage_high?: number
   cpu_usage_critical?: number
@@ -116,10 +115,7 @@ export async function toggleEsMonitor(id: number, enable: boolean): Promise<void
   await http.post(`/api/v1/elasticsearch/monitors/${id}/toggle`, { enable })
 }
 
-export async function testEsMonitor(id: number): Promise<any> {
-  const { data } = await http.post(`/api/v1/elasticsearch/monitors/${id}/test`)
-  return unwrap<any>(data)
-}
+// testEsMonitor 已移除，測試連線請使用 ESConnection API
 
 export type ESAlert = {
   id: number
@@ -192,16 +188,18 @@ export async function getEsAlert(id: number): Promise<ESAlert> {
   return unwrap<ESAlert>(data)
 }
 
-export async function resolveEsAlert(id: number, resolutionNote?: string): Promise<void> {
-  await http.post(`/api/v1/elasticsearch/alerts/${id}/resolve`, {
+export async function resolveEsAlert(monitorId: number, alertTime: string, resolutionNote?: string, resolvedBy?: string): Promise<void> {
+  await http.post(`/api/v1/elasticsearch/alerts/${monitorId}/resolve`, {
+    alert_time: alertTime,
     resolution_note: resolutionNote,
+    resolved_by: resolvedBy,
   })
 }
 
-export async function acknowledgeEsAlert(id: number, acknowledgedBy?: string, note?: string): Promise<void> {
-  await http.put(`/api/v1/elasticsearch/alerts/${id}/acknowledge`, {
+export async function acknowledgeEsAlert(monitorId: number, alertTime: string, acknowledgedBy?: string): Promise<void> {
+  await http.put(`/api/v1/elasticsearch/alerts/${monitorId}/acknowledge`, {
+    alert_time: alertTime,
     acknowledged_by: acknowledgedBy,
-    note: note,
   })
 }
 

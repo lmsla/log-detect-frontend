@@ -8,17 +8,18 @@ import {
   testESConnection,
   setDefaultESConnection,
   reloadESConnection,
-  type ESConnection
+  type ESConnection,
+  type ESConnectionSummary
 } from '@/api/esConnection'
 import useAutoPageSize from '@/hooks/useAutoPageSize'
 import PageHeader from '@/components/PageHeader'
 import { CheckCircleOutlined, CloseCircleOutlined, QuestionCircleOutlined, ReloadOutlined, ThunderboltOutlined } from '@ant-design/icons'
 
 export default function ESConnections() {
-  const [data, setData] = useState<ESConnection[]>([])
+  const [data, setData] = useState<ESConnectionSummary[]>([])
   const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing] = useState<ESConnection | null>(null)
+  const [editing, setEditing] = useState<ESConnectionSummary | null>(null)
   const [testingId, setTestingId] = useState<number | null>(null)
   const [form] = Form.useForm<ESConnection>()
   const [msgApi, contextHolder] = message.useMessage()
@@ -48,9 +49,9 @@ export default function ESConnections() {
     setModalOpen(true)
   }
 
-  const openEdit = (record: ESConnection) => {
+  const openEdit = (record: ESConnectionSummary) => {
     setEditing(record)
-    form.setFieldsValue(record)
+    form.setFieldsValue(record as any)
     setModalOpen(true)
   }
 
@@ -83,11 +84,11 @@ export default function ESConnections() {
     }
   }
 
-  const handleTest = async (record: ESConnection) => {
+  const handleTest = async (record: ESConnectionSummary) => {
     if (!record.id) return
     setTestingId(record.id)
     try {
-      await testESConnection(record)
+      await testESConnection(record as any)
       msgApi.success('連接測試成功')
     } catch (e: any) {
       msgApi.error(e?.message || '連接測試失敗')
@@ -137,7 +138,7 @@ export default function ESConnections() {
       />
 
       <div ref={tableWrapRef}>
-        <Table<ESConnection>
+        <Table<ESConnectionSummary>
           rowKey={(r) => String(r.id ?? Math.random())}
           loading={loading}
           dataSource={data}

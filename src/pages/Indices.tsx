@@ -13,7 +13,7 @@ import {
 import useDebouncedValue from '@/hooks/useDebouncedValue'
 import useAutoPageSize from '@/hooks/useAutoPageSize'
 import { getDeviceGroups } from '@/api/devices'
-import { getAllESConnections, type ESConnection } from '@/api/esConnection'
+import { getAllESConnections, type ESConnectionSummary } from '@/api/esConnection'
 
 const PERIOD_OPTIONS = ['minutes', 'hours', 'days']
 
@@ -30,7 +30,7 @@ export default function Indices() {
   const [msgApi, contextHolder] = message.useMessage()
   const { ref: tableWrapRef, pageSize } = useAutoPageSize({ min: 8 })
   const [groups, setGroups] = useState<string[]>([])
-  const [esConnections, setEsConnections] = useState<ESConnection[]>([])
+  const [esConnections, setEsConnections] = useState<ESConnectionSummary[]>([])
 
   const filtered = useMemo(() => {
     const kw = debouncedKw.trim().toLowerCase()

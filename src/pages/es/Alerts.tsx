@@ -169,6 +169,15 @@ export default function EsAlerts() {
     loadAlerts(pagination.page, pagination.pageSize)
   }, [loadAlerts, pagination.page, pagination.pageSize])
 
+  const monitorNameMap = useMemo(() => {
+    const map = new Map<number, string>()
+    monitors.forEach((m) => {
+      const name = m.name || (m.es_connection ? `${m.es_connection.host}:${m.es_connection.port}` : `ID: ${m.id}`)
+      if (m.id) map.set(m.id, name)
+    })
+    return map
+  }, [monitors])
+
   const updateFilters = (payload: Partial<AlertFilters>) => {
     setFilters((prev) => {
       const next = { ...prev, ...payload }
@@ -202,10 +211,10 @@ export default function EsAlerts() {
       const values = await actionForm.validateFields()
       setActionLoading(true)
       if (actionModal.type === 'resolve') {
-        await resolveEsAlert(actionModal.alert.id, values.resolution_note)
+        await resolveEsAlert(actionModal.alert.monitor_id, actionModal.alert.time, values.resolution_note)
         msgApi.success('已標記為已解決')
       } else {
-        await acknowledgeEsAlert(actionModal.alert.id, values.acknowledged_by, values.note)
+        await acknowledgeEsAlert(actionModal.alert.monitor_id, actionModal.alert.time, values.acknowledged_by)
         msgApi.success('已標記為已確認')
       }
       closeActionModal()
@@ -238,10 +247,10 @@ export default function EsAlerts() {
         sorter: (a, b) => dayjs(a.time).valueOf() - dayjs(b.time).valueOf(),
       },
       {
-        title: '監控器',
+        title: '監控名稱',
         dataIndex: 'monitor_name',
         ellipsis: true,
-        render: (value: string, record) => value || `#${record.monitor_id}`,
+        render: (value: string, record) => value || monitorNameMap.get(record.monitor_id) || `#${record.monitor_id}`,
       },
       {
         title: '嚴重性',
@@ -287,13 +296,13 @@ export default function EsAlerts() {
         },
       },
     ]
-  }, [])
+  }, [monitorNameMap])
 
   const monitorOptions = useMemo(
     () =>
       monitors.map((monitor) => ({
         value: monitor.id,
-        label: monitor.name || `${monitor.host}:${monitor.port}`,
+        label: monitor.name || (monitor.es_connection ? `${monitor.es_connection.host}:${monitor.es_connection.port}` : `ID: ${monitor.id}`),
       })),
     [monitors]
   )

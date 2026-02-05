@@ -234,7 +234,7 @@ export default function EsHistory() {
     () =>
       monitors.map((monitor) => ({
         value: monitor.id,
-        label: monitor.name || `${monitor.host}:${monitor.port}`,
+        label: monitor.name || (monitor.es_connection ? `${monitor.es_connection.host}:${monitor.es_connection.port}` : `ID: ${monitor.id}`),
       })),
     [monitors]
   )

@@ -12,7 +12,15 @@ export type ESMonitorStatus = {
      */
     monitor_name?: string;
     /**
-     * Host and port
+     * ES 連線 ID
+     */
+    es_connection_id?: number;
+    /**
+     * ES 連線名稱
+     */
+    es_connection_name?: string;
+    /**
+     * Host and port (從 ESConnection 取得)
      */
     host?: string;
     /**
