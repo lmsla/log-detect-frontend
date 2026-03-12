@@ -68,7 +68,11 @@ export default function EsMonitors() {
       const values = await notifForm.validateFields()
       setNotifSaving(true)
       await updateEsMonitor({
+        ...notifTarget,
         id: notifTarget.id,
+        name: notifTarget.name,
+        es_connection_id: notifTarget.es_connection_id,
+        interval: notifTarget.interval,
         receivers: values.receivers || [],
         subject: values.subject || '',
         description: values.description || ''
