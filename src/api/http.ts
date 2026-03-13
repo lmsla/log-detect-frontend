@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getToken, setAuth, clearAuth } from '@/store/auth'
 
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8006',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8006',
   timeout: 20000
 })
 

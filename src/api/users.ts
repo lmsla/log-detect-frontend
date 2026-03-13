@@ -1,6 +1,6 @@
 import { LogDetectApi, type User } from './openapiClient'
 
-const api = new LogDetectApi({ BASE: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8006' })
+const api = new LogDetectApi({ BASE: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8006' })
 
 export type { User }
 

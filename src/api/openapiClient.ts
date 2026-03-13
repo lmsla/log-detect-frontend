@@ -16,7 +16,7 @@ import type {} from './generated'
 import { OpenAPI } from './generated'
 
 // Base API URL (falls back to dev default)
-OpenAPI.BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8006'
+OpenAPI.BASE = (import.meta as any).env?.VITE_API_BASE_URL ?? 'http://localhost:8006'
 
 // Provide token dynamically before each request
 OpenAPI.TOKEN = async () => {

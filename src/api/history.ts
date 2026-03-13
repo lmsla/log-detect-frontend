@@ -6,7 +6,7 @@ export type HistoryLogname = {
   lost: string
 }
 
-const api = new LogDetectApi({ BASE: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8006' })
+const api = new LogDetectApi({ BASE: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8006' })
 
 export async function getHistoryData(logname: string) {
   return api.history.getApiV1HistoryGetData(logname)

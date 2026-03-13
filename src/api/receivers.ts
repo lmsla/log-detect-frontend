@@ -1,7 +1,7 @@
 import { LogDetectApi, type Receiver } from './openapiClient'
 export type { Receiver } from './openapiClient'
 
-const api = new LogDetectApi({ BASE: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8006' })
+const api = new LogDetectApi({ BASE: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8006' })
 
 export async function getAllReceivers() {
   return api.receiverManagement.getApiV1ReceiverGetAll()
