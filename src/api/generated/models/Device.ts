@@ -9,12 +9,19 @@ export type Device = (CommonFields & {
      */
     id: number;
     /**
-     * Device group name
+     * Device group name (corresponds to DeviceGroup.name)
      */
     device_group: string;
     /**
-     * Device name
+     * Device hostname
      */
     name: string;
+    /**
+     * HA cluster identifier. Devices sharing the same ha_group belong to the same
+     * HA cluster and only trigger an alert when ALL members in the group are offline.
+     * Empty string means the device is standalone (alert on any offline).
+     *
+     */
+    ha_group?: string;
 });
 

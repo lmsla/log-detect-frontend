@@ -6,6 +6,7 @@ import type { BaseHttpRequest } from './core/BaseHttpRequest';
 import type { OpenAPIConfig } from './core/OpenAPI';
 import { AxiosHttpRequest } from './core/AxiosHttpRequest';
 import { AuthenticationService } from './services/AuthenticationService';
+import { DeviceGroupManagementService } from './services/DeviceGroupManagementService';
 import { DeviceManagementService } from './services/DeviceManagementService';
 import { ElasticsearchAlertsService } from './services/ElasticsearchAlertsService';
 import { ElasticsearchMonitoringService } from './services/ElasticsearchMonitoringService';
@@ -19,6 +20,7 @@ import { UserManagementService } from './services/UserManagementService';
 type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
 export class LogDetectApi {
     public readonly authentication: AuthenticationService;
+    public readonly deviceGroupManagement: DeviceGroupManagementService;
     public readonly deviceManagement: DeviceManagementService;
     public readonly elasticsearchAlerts: ElasticsearchAlertsService;
     public readonly elasticsearchMonitoring: ElasticsearchMonitoringService;
@@ -43,6 +45,7 @@ export class LogDetectApi {
             ENCODE_PATH: config?.ENCODE_PATH,
         });
         this.authentication = new AuthenticationService(this.request);
+        this.deviceGroupManagement = new DeviceGroupManagementService(this.request);
         this.deviceManagement = new DeviceManagementService(this.request);
         this.elasticsearchAlerts = new ElasticsearchAlertsService(this.request);
         this.elasticsearchMonitoring = new ElasticsearchMonitoringService(this.request);

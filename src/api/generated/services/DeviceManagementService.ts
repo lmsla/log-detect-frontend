@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { Device } from '../models/Device';
 import type { DeviceCount } from '../models/DeviceCount';
-import type { DeviceGroup } from '../models/DeviceGroup';
+import type { DeviceGroupLegacy } from '../models/DeviceGroupLegacy';
 import type { SuccessResponse } from '../models/SuccessResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
@@ -108,12 +108,21 @@ export class DeviceManagementService {
         });
     }
     /**
-     * Get Device Groups
-     * Get all device groups
-     * @returns DeviceGroup Device groups retrieved
+     * Get Device Groups (Legacy)
+     * Get all device groups with device count statistics.
+     *
+     * **⚠️ Legacy Endpoint**: This endpoint is maintained for backward compatibility.
+     * New applications should use `/api/v1/DeviceGroup/GetAll` instead.
+     *
+     * **Backward Compatibility**:
+     * - Returns `device_group` field instead of `name` (legacy field name)
+     * - Includes device count statistics
+     * - Response format differs from new endpoints
+     *
+     * @returns DeviceGroupLegacy Device groups retrieved (legacy format)
      * @throws ApiError
      */
-    public getApiV1DeviceGetGroup(): CancelablePromise<Array<DeviceGroup>> {
+    public getApiV1DeviceGetGroup(): CancelablePromise<Array<DeviceGroupLegacy>> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/v1/Device/GetGroup',

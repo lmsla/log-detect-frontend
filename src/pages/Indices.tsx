@@ -32,6 +32,8 @@ export default function Indices() {
   const [groups, setGroups] = useState<string[]>([])
   const [esConnections, setEsConnections] = useState<ESConnectionSummary[]>([])
 
+  const normalizeLogname = (value?: string) => value?.trim().toLowerCase() || ''
+
   const filtered = useMemo(() => {
     const kw = debouncedKw.trim().toLowerCase()
     return data.filter((i) =>
@@ -49,8 +51,8 @@ export default function Indices() {
         getAllESConnections()
       ])
       setData(indices)
-      setLognames((ln || []).map((x: LogName) => x.logname))
-      setGroups(groupObjs.map((g) => g.device_group))
+      setLognames((ln || []).map((x: LogName) => x.logname).filter((v): v is string => !!v))
+      setGroups(groupObjs.map((g) => g.device_group).filter((v): v is string => !!v))
       setEsConnections(connections)
     } catch (e: any) {
       msgApi.error(e?.message || '載入索引失敗')
@@ -97,6 +99,18 @@ export default function Indices() {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
+      const normalizedLogname = normalizeLogname(values.logname)
+      const hasDuplicateLogname = data.some((item) => {
+        if (!item.logname) return false
+        if (editing?.id && item.id === editing.id) return false
+        return normalizeLogname(item.logname) === normalizedLogname
+      })
+
+      if (hasDuplicateLogname) {
+        msgApi.error('Logname 已存在，不可使用僅大小寫不同的相同名稱')
+        return
+      }
+
       if (editing?.id) {
         const { id: _omit, ...rest } = values as any
         await updateIndex({ ...rest, id: editing.id })
@@ -220,8 +234,13 @@ export default function Indices() {
         width={680}
       >
         <Form<Index> form={form} layout="vertical" initialValues={{ period: 'minutes', unit: 60 }}>
-          <Form.Item label="Pattern" name="pattern" rules={[{ required: true, message: '請輸入 pattern' }]}>
-            <Input placeholder="logstash-log_detect-*" />
+          <Form.Item
+            label="Pattern"
+            name="pattern"
+            extra="若要匹配多個索引，請自行加入萬用字元 *；例如 logstash-firewall-fortigate*。未加 * 時只會查完全相同名稱的索引。"
+            rules={[{ required: true, message: '請輸入 pattern' }]}
+          >
+            <Input placeholder="例如：logstash-log_detect-* 或 logstash-firewall-fortigate*" />
           </Form.Item>
           <Form.Item label="Device Group" name="device_group" rules={[{ required: true, message: '請選擇 Device Group' }]}>
             <Select showSearch placeholder={groups.length ? '選擇既有群組' : '尚無群組，請先至設備頁建立'} options={groups.map((g) => ({ label: g, value: g }))} disabled={groups.length === 0} />

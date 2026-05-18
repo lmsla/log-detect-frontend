@@ -1,4 +1,4 @@
-import { Button, Card, Form, Input, Modal, Popconfirm, Space, Typography, message, Table, Pagination, AutoComplete, Tag, theme } from 'antd'
+import { Button, Card, Form, Input, Modal, Popconfirm, Space, Typography, message, Table, Pagination, AutoComplete, Tag, Switch, theme } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { createDevices, deleteDevice, getAllDevices, getDeviceGroups, updateDevice, getDeviceCounts, type Device } from '@/api/devices'
@@ -10,7 +10,7 @@ import PageHeader from '@/components/PageHeader'
 import BulkBar from '@/components/BulkBar'
 import { useThemeMode } from '@/theme/ThemeContext'
 
-type Query = { keyword: string; group?: string }
+type Query = { keyword: string; group?: string; haOnly: boolean }
 
 export default function Devices() {
   const { token } = theme.useToken()
@@ -19,7 +19,7 @@ export default function Devices() {
   const [groups, setGroups] = useState<string[]>([])
   const [groupStats, setGroupStats] = useState<DeviceGroupWithCount[]>([])
   const [loading, setLoading] = useState(false)
-  const [query, setQuery] = useState<Query>({ keyword: '', group: undefined })
+  const [query, setQuery] = useState<Query>({ keyword: '', group: undefined, haOnly: false })
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Device | null>(null)
   const [form] = Form.useForm<Device>()
@@ -46,8 +46,38 @@ export default function Devices() {
     const kw = debouncedKw.trim().toLowerCase()
     return data
       .filter((d) => (query.group ? d.device_group === query.group : true))
-      .filter((d) => (kw ? d.name.toLowerCase().includes(kw) || d.device_group.toLowerCase().includes(kw) : true))
-  }, [data, query.group, debouncedKw])
+      .filter((d) => (query.haOnly ? !!d.ha_group : true))
+      .filter((d) => (
+        kw
+          ? d.name.toLowerCase().includes(kw) ||
+            d.device_group.toLowerCase().includes(kw) ||
+            (d.ha_group || '').toLowerCase().includes(kw)
+          : true
+      ))
+      .sort((a, b) => {
+        const groupCmp = a.device_group.localeCompare(b.device_group)
+        if (groupCmp !== 0) return groupCmp
+        const aHa = a.ha_group || '\uffff'
+        const bHa = b.ha_group || '\uffff'
+        const haCmp = aHa.localeCompare(bHa)
+        if (haCmp !== 0) return haCmp
+        return a.name.localeCompare(b.name)
+      })
+  }, [data, query.group, query.haOnly, debouncedKw])
+
+  const rowDecorations = useMemo(() => {
+    const map = new Map<string, { isHA: boolean; isGroupStart: boolean }>()
+    let prevHA: string | undefined
+    filtered.forEach((item) => {
+      const key = String(item.id ?? `${item.device_group}-${item.name}`)
+      const currentHA = item.ha_group || undefined
+      const isHA = !!currentHA
+      const isGroupStart = isHA && currentHA !== prevHA
+      map.set(key, { isHA, isGroupStart })
+      prevHA = currentHA
+    })
+    return map
+  }, [filtered])
 
   const load = async () => {
     setLoading(true)
@@ -236,10 +266,14 @@ export default function Devices() {
           <Space>
             <Input.Search
               allowClear
-              placeholder="搜尋名稱或群組"
+              placeholder="搜尋名稱、群組或 HA 群組"
               onChange={(e) => setQuery((q) => ({ ...q, keyword: e.target.value }))}
               style={{ width: 260 }}
             />
+            <Space size={8}>
+              <Typography.Text type="secondary">只看 HA</Typography.Text>
+              <Switch checked={query.haOnly} onChange={(checked) => setQuery((q) => ({ ...q, haOnly: checked }))} />
+            </Space>
             <Button
               type="primary"
               onClick={openCreateGroup}
@@ -395,6 +429,19 @@ export default function Devices() {
               loading={loading}
               dataSource={filtered}
               size="middle"
+              onRow={(record) => {
+                const key = String(record.id ?? `${record.device_group}-${record.name}`)
+                const decoration = rowDecorations.get(key)
+                if (!decoration?.isHA) return {}
+                return {
+                  style: {
+                    background: isDark ? 'rgba(34, 211, 238, 0.06)' : 'rgba(8, 145, 178, 0.06)',
+                    borderTop: decoration.isGroupStart
+                      ? `2px solid ${isDark ? 'rgba(34, 211, 238, 0.55)' : 'rgba(8, 145, 178, 0.45)'}`
+                      : undefined
+                  }
+                }
+              }}
               pagination={{ pageSize, showSizeChanger: false }}
               rowSelection={{
                 selectedRowKeys: selectedKeys,
@@ -403,8 +450,23 @@ export default function Devices() {
                 preserveSelectedRowKeys: true
               }}
               columns={[
-                { title: '設備名稱', dataIndex: 'name' },
+                {
+                  title: '設備名稱',
+                  dataIndex: 'name',
+                  render: (value, record) => (
+                    <Space size={8}>
+                      <span>{value}</span>
+                      {record.ha_group ? <Tag color="blue">HA</Tag> : null}
+                    </Space>
+                  )
+                },
                 { title: '群組', dataIndex: 'device_group', width: 180 },
+                {
+                  title: 'HA 群組',
+                  dataIndex: 'ha_group',
+                  width: 180,
+                  render: (value?: string) => (value ? <Tag color="cyan">{value}</Tag> : '-')
+                },
                 {
                   title: '操作',
                   width: 180,
@@ -444,6 +506,9 @@ export default function Devices() {
               onFocus={() => setGroupDropdownOpen(true)}
               onBlur={() => setGroupDropdownOpen(false)}
             />
+          </Form.Item>
+          <Form.Item label="HA 群組" name="ha_group">
+            <Input placeholder="例如：fw-cluster-01（選填）" />
           </Form.Item>
           <Form.Item label="名稱" name="name" rules={[{ required: true, message: '請輸入名稱' }]}>
             <Input placeholder="例如：FW-001" />

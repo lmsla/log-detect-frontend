@@ -77,10 +77,10 @@ export default function ESConnections() {
     if (!id) return
     try {
       await deleteESConnection(id)
-      msgApi.success('刪除成功')
+      msgApi.success('已停用並隱藏該 ES 連接')
       load()
     } catch (e: any) {
-      msgApi.error(e?.message || '刪除失敗')
+      msgApi.error(e?.message || '軟刪除失敗')
     }
   }
 
@@ -210,8 +210,12 @@ export default function ESConnections() {
                     編輯
                   </Button>
                   <Popconfirm
-                    title="確認刪除？"
-                    description={record.is_default ? '這是默認連接，刪除後請設置新的默認連接' : undefined}
+                    title="確認停用並隱藏此 ES 連接？"
+                    description={
+                      record.is_default
+                        ? '這是默認連接。此操作為軟刪除，資料仍會保留於資料庫中，刪除前請先設置新的默認連接。'
+                        : '此操作為軟刪除，資料仍會保留於資料庫中。'
+                    }
                     onConfirm={() => handleDelete(record.id)}
                   >
                     <Button size="small" danger disabled={record.is_default}>

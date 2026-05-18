@@ -7,8 +7,13 @@ export type TimelinePoint = {
   lost: 'true' | 'false' | 'none' | string
 }
 
+export type TimelineDeviceMeta = {
+  haGroup?: string
+}
+
 export type HistoryTimelineProps = {
   data: TimelinePoint[]
+  deviceMeta?: Record<string, TimelineDeviceMeta>
   heightPerRow?: number
   cellWidth?: number
   cellGap?: number
@@ -33,6 +38,7 @@ function hhmmToMinutes(t: string): number {
 
 export default function HistoryTimeline({
   data,
+  deviceMeta,
   heightPerRow = 28,
   cellWidth = 8,
   cellGap = 2,
@@ -50,8 +56,14 @@ export default function HistoryTimeline({
   const [fittedCellWidth, setFittedCellWidth] = useState<number>(cellWidth)
   const [needsScroll, setNeedsScroll] = useState<boolean>(false)
   // 標準化資料與軸
-  const { devices, times, matrix } = useMemo(() => {
-    const names = Array.from(new Set(data.map((d) => d.name))).sort()
+  const { devices, times, matrix, groupStarts } = useMemo(() => {
+    const names = Array.from(new Set(data.map((d) => d.name))).sort((a, b) => {
+      const aHa = deviceMeta?.[a]?.haGroup || '\uffff'
+      const bHa = deviceMeta?.[b]?.haGroup || '\uffff'
+      const haCmp = aHa.localeCompare(bHa)
+      if (haCmp !== 0) return haCmp
+      return a.localeCompare(b)
+    })
     const timeSet = new Set<string>()
     data.forEach((d) => timeSet.add(d.time))
     const timeList = Array.from(timeSet).sort((a, b) => hhmmToMinutes(a) - hhmmToMinutes(b))
@@ -63,8 +75,16 @@ export default function HistoryTimeline({
       mat[d.name][d.time] = d.lost
     })
 
-    return { devices: names, times: timeList, matrix: mat }
-  }, [data])
+    const starts = new Set<string>()
+    let prevHA: string | undefined
+    names.forEach((name) => {
+      const currentHA = deviceMeta?.[name]?.haGroup || undefined
+      if (currentHA && currentHA !== prevHA) starts.add(name)
+      prevHA = currentHA
+    })
+
+    return { devices: names, times: timeList, matrix: mat, groupStarts: starts }
+  }, [data, deviceMeta])
 
   // 自動適配：依容器寬度計算每個時間切片寬度
   useEffect(() => {
@@ -112,7 +132,18 @@ export default function HistoryTimeline({
         <div style={{ flex: `0 0 ${leftLabelWidth}px` }}>
           <div style={{ height: heightPerRow, display: 'flex', alignItems: 'center', fontSize: 12, color: '#999' }}>設備</div>
           {devices.map((name) => (
-            <div key={name} style={{ height: heightPerRow, display: 'flex', alignItems: 'center' }}>
+            <div
+              key={name}
+              style={{
+                height: heightPerRow,
+                display: 'flex',
+                alignItems: 'center',
+                borderTop: groupStarts.has(name) ? '2px solid rgba(24, 144, 255, 0.35)' : undefined,
+                background: deviceMeta?.[name]?.haGroup ? 'rgba(24, 144, 255, 0.05)' : undefined,
+                paddingLeft: 4
+              }}
+              title={deviceMeta?.[name]?.haGroup ? `HA 群組：${deviceMeta[name].haGroup}` : undefined}
+            >
               <span style={{ fontSize: 12 }}>{name}</span>
             </div>
           ))}
@@ -140,7 +171,16 @@ export default function HistoryTimeline({
             const totalWidth = times.length * cw + Math.max(0, times.length - 1) * cellGap
             const colStep = cw + cellGap
             return (
-              <div key={name} style={{ height: heightPerRow, display: 'flex', alignItems: 'center' }}>
+              <div
+                key={name}
+                style={{
+                  height: heightPerRow,
+                  display: 'flex',
+                  alignItems: 'center',
+                  borderTop: groupStarts.has(name) ? '2px solid rgba(24, 144, 255, 0.35)' : undefined,
+                  background: deviceMeta?.[name]?.haGroup ? 'rgba(24, 144, 255, 0.05)' : undefined
+                }}
+              >
                 <div style={{ position: 'relative', width: totalWidth }}>
                   {/* cells */}
                   <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: `${cw}px`, columnGap: cellGap }}>

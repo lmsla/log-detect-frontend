@@ -1,4 +1,5 @@
 import { LogDetectApi, type HistoryData } from './openapiClient'
+import { http } from './http'
 export type { HistoryData }
 
 export type HistoryLogname = {
@@ -8,7 +9,13 @@ export type HistoryLogname = {
 
 const api = new LogDetectApi({ BASE: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8006' })
 
-export async function getHistoryData(logname: string) {
+export async function getHistoryData(logname: string, hours?: number) {
+  if (typeof hours === 'number') {
+    const res = await http.get<HistoryData[]>(`/api/v1/History/GetData/${encodeURIComponent(logname)}`, {
+      params: { hours }
+    })
+    return res.data || []
+  }
   return api.history.getApiV1HistoryGetData(logname)
 }
 

@@ -20,8 +20,7 @@ export type OpenAPIConfig = {
 };
 
 export const OpenAPI: OpenAPIConfig = {
-    //BASE: 'http://localhost:8006',
-    BASE: 'http://log-detect.lab.local',
+    BASE: 'http://localhost:8006',
     VERSION: '1.0.0',
     WITH_CREDENTIALS: false,
     CREDENTIALS: 'include',
